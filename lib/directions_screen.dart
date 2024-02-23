@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 
+import 'package:human_directios/widgets/google_directios_steps_widget.dart';
+import 'package:human_directios/widgets/human_directios_widget.dart';
+import 'package:human_directios/widgets/request_status_widgets.dart';
+
 class DirectionsScreen extends StatefulWidget {
   const DirectionsScreen(
       {required this.openAiApiKey,
@@ -14,25 +18,50 @@ class DirectionsScreen extends StatefulWidget {
 }
 
 class _DirectionsScreenState extends State<DirectionsScreen> {
-  late HumanDirections directions;
+  String origin = '';
+  String destination = '';
+  String requestResult = '';
+  Distance resolvedDistance = Distance();
+  Time resolvedTime = Time();
 
-  String origin =
-      "Porte d'Aix, 19 Pl. Jules Guesde, 13003 Marseille, Francia";
-  String destination =
-      'Aix-Marseille University, 3 Pl. Victor Hugo, 13331 Marseille, Francia';
+  Widget googleDirectionsStepsWidget = const WaitingForUserInput();
+  Widget humanDirectionsWidget = const WaitingForUserInput();
+  final TextEditingController _originFieldController = TextEditingController();
+  final TextEditingController _destinationFieldController =
+      TextEditingController();
   @override
   void initState() {
     super.initState();
-    _fetchDirections();
   }
 
   void _fetchDirections() async {
-    directions = HumanDirections( 
+    HumanDirections directions = HumanDirections(
         openAiApiKey: widget.openAiApiKey,
         googleDirectionsApiKey: widget.googleDirectionsApiKey);
     directions.fetchHumanDirections(origin, destination);
+    setState(() {
+      googleDirectionsStepsWidget = const WaitingRequestResult(
+          statusMessage:
+              'Awaiting google directions Results\nPlease Hold on...');
+      humanDirectionsWidget = const WaitingRequestResult(
+          statusMessage:
+              'Awaiting openAI directions Results\nPlease Hold on...');
+    });
+
     Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
+        if (directions.fetchResultFlag == 0) {
+          requestResult = directions.requestResult;
+          resolvedDistance = directions.resolvedDistance;
+          resolvedTime = directions.resolvedTime;
+          googleDirectionsStepsWidget =
+              GoogleDirectionsSteps(steps: directions.steps);
+        }
+        if (directions.humanDirectionsFlag == 0) {
+          humanDirectionsWidget = HumanStepsWidget(
+              stringHumanDirections:
+                  directions.updateFetchHumanDirections ?? 'ERROR');
+        }
         if (directions.fetchResultFlag == 0 &&
             directions.fetchHumanDirectionsFlag == 0) {
           timer.cancel();
@@ -41,91 +70,74 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
     });
   }
 
+  void _getUserFields() {
+    String tempOrigin = _originFieldController.text;
+    String tempDestination = _destinationFieldController.text;
+    if (tempOrigin.isNotEmpty && tempDestination.isNotEmpty) {
+      origin = tempOrigin;
+      destination = tempDestination;
+      _fetchDirections();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    int stepsCounter = 1;
-
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Human Direction v0'),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-          child: Column(
-            children: [
-              Text('Origen: $origin'),
-              Text('Destino: $destination'),
-              Text(directions.requestResult),
-              Text((directions.resolvedDistance.text ?? '0')),
-              Text(directions.resolvedTime.text ?? '0'),
-              const SizedBox(
-                height: 10,
-              ),
-              SizedBox(
-                height: 300,
-                width: 390,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      ...?directions.steps?.map(
-                        (e) {
-                          /*if (kDebugMode) {
-                            print(
-                                '$stepsCounter - De: ${e.startLocation.toString()} Hacia: ${e.endLocation.toString()}, Instrucciones: ${e.instructions},Distancia:${e.distance?.text}  ,Duración Estimada:${e.duration?.text}  , Maniobra: ${e.maneuver} ');
-                          }*/
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                  width: 15,
-                                  child: Container(
-                                      alignment: Alignment.topLeft,
-                                      child:
-                                          Text((stepsCounter++).toString()))),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Text('De: ${e.startLocation.toString()}'),
-                                    Text('Hacia: ${e.endLocation.toString()}'),
-                                    Text('Distamcia: ${e.distance?.text}'),
-                                    Text(
-                                        'Duración Estimada: ${e.duration?.text} '),
-                                    Text('Instrucciones: ${e.instructions}'),
-                                    if (e.maneuver != null)
-                                      Text('Maniobra: ${e.maneuver}'),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
+      body: SingleChildScrollView(
+        child: Center(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _originFieldController,
+                  decoration: const InputDecoration(
+                    labelText: 'Origen',
                   ),
                 ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              const Text('Human Directions:'),
-              SizedBox(
-                height: 200,
-                width: 390,
-                child: SingleChildScrollView(
-                  child: Text(
-                    (directions.updateFetchHumanDirections ??
-                        'Error on gpt prompt'),
+                TextField(
+                  controller: _destinationFieldController,
+                  decoration: const InputDecoration(
+                    labelText: 'Destino',
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _getUserFields,
+                      child: const Text('Get Directions'),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Column(
+                      children: [
+                        Text('Request Status: $requestResult'),
+                        Text(
+                            ('Total Distance: ${resolvedDistance.text ?? '0'}')),
+                        Text('Total Time: ${resolvedTime.text ?? '0'}'),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                googleDirectionsStepsWidget,
+                const SizedBox(
+                  height: 10,
+                ),
+                humanDirectionsWidget,
+              ],
+            ),
           ),
         ),
       ),
