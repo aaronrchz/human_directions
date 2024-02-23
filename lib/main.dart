@@ -12,10 +12,6 @@ class MyApp extends StatelessWidget {
   final String openAiApiKey = dotenv.env['OPENAI_API_KEY'] ?? 'NO SUCH KEY';
   final String googleDirectionsApiKey =
       dotenv.env['GOOGLE_DIRECTIOS_API_KEY'] ?? 'NO SUCH KEY';
-  final String origin =
-      "Porte d'Aix, 19 Pl. Jules Guesde, 13003 Marseille, Francia";
-  final String destination =
-      'Aix-Marseille University, 3 Pl. Victor Hugo, 13331 Marseille, Francia';
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
