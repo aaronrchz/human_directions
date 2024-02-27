@@ -14,7 +14,7 @@ class PlacesTest extends StatelessWidget {
         appBar: AppBar(title: const Text('Google Places API Example')),
         body: Center(
           child: FutureBuilder(
-            future: fetchNearbyPlaces(
+            future: PlacesController().fetchNearbyPlaces(
                 const GeoCoord(21.09493179360217, -101.65238872573657), 50.0),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -26,7 +26,7 @@ class PlacesTest extends StatelessWidget {
                 return ListView.builder(
                   itemCount: places?.length,
                   itemBuilder: (context, index) {
-                    summaryNerbyPlaces(places);
+                    PlacesController().summaryNerbyPlaces(places);
                     return ListTile(
                       title: Text(places?[index]['name']),
                     );
@@ -40,6 +40,10 @@ class PlacesTest extends StatelessWidget {
     );
   }
 }
+
+class PlacesController{
+String placesSummary = '';
+int summaryFlag = 0;
 
 Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, double radius,
     {String type = PlaceType.any}) async {
@@ -73,8 +77,8 @@ Future<String> fetchAndSummarizeNearbyPlaces(
     {String type = PlaceType.any}) async {
   try {
     GeoCoord queryCoord;
-    if(centerCoord == null){
-      queryCoord = centerCoord ?? const GeoCoord(0, 0);
+    if(centerCoord != null){
+      queryCoord = centerCoord;
     }else{
       return 'Error invalid geoCoord';
     }
@@ -85,4 +89,5 @@ Future<String> fetchAndSummarizeNearbyPlaces(
   } catch (e) {
     throw Exception('Failed to fetch and summarize nearby places: $e');
   }
+}
 }
