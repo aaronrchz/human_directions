@@ -24,4 +24,4 @@ google_directions_api: ^0.10.0 : https://pub.dev/packages/google_directions_api/
 
 flutter_dotenv: ^5.1.0 : https://pub.dev/packages/flutter_dotenv
 
-flutter_google_places_sdk: ^0.3.7 : https://pub.dev/packages/flutter_google_places_sdk
+http:  ^1.1.0
