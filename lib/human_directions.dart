@@ -78,7 +78,7 @@ class HumanDirections {
     final systemMessage = OpenAIChatCompletionChoiceMessageModel(
       content: [
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "At the start of your response put the imput message you received",
+          "Use casual lenguage",
         ),
       ],
       role: OpenAIChatMessageRole.assistant,

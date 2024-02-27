@@ -4,7 +4,7 @@ import 'package:human_directios/directions_screen.dart';
 
 void main() async {
   await dotenv.load(fileName: 'assets/.env');
-  runApp(MyApp());
+  runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
