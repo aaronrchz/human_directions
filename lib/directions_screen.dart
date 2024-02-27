@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:human_directios/componets/supported_lenguages.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 
@@ -37,7 +38,10 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
   void _fetchDirections() async {
     HumanDirections directions = HumanDirections(
         openAiApiKey: widget.openAiApiKey,
-        googleDirectionsApiKey: widget.googleDirectionsApiKey);
+        googleDirectionsApiKey: widget.googleDirectionsApiKey,
+        openAIlenguage: OpenAILenguage.es,
+        googlelenguage: 'es-419',
+        );
     directions.fetchHumanDirections(origin, destination);
     setState(() {
       googleDirectionsStepsWidget = const WaitingRequestResult(

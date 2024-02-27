@@ -1,6 +1,7 @@
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:human_directios/componets/places.dart';
+import 'package:human_directios/componets/supported_lenguages.dart';
 
 class HumanDirections {
   /* flags */
@@ -18,19 +19,20 @@ class HumanDirections {
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
+  String openAIlenguage;
   String prompt;
-  String lenguage;
+  String googlelenguage;
   UnitSystem unitSystem;
   TravelMode travelMode;
 
   HumanDirections({
     required this.openAiApiKey,
     required this.googleDirectionsApiKey,
-    this.prompt =
-        'Convierte este set de instreucciones en un set mas amigable para humanos, como si hablaras con una persona que no conoce la ciudad, especifica cuando se hace referencia a una calle, avenida etc.: \n',
-    this.lenguage = 'es-419',
+    this.prompt = '\n',
+    this.googlelenguage = 'en',
     this.unitSystem = UnitSystem.metric,
     this.travelMode = TravelMode.walking,
+    this.openAIlenguage = OpenAILenguage.en
   });
   /* getters */
   List<Step>? get directionsStepsList => steps;
@@ -55,7 +57,7 @@ class HumanDirections {
         destination: destination,
         travelMode: travelMode,
         unitSystem: unitSystem,
-        language: lenguage);
+        language: googlelenguage);
 
     directionsService.route(request,
         (DirectionsResult response, DirectionsStatus? status) {
@@ -78,7 +80,13 @@ class HumanDirections {
     final systemMessage = OpenAIChatCompletionChoiceMessageModel(
       content: [
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "Use casual lenguage",
+          """
+          Convert this instruction set to a more human-friendly format. 
+          Assume this person does not know how to navigate the city. 
+          Specify when mentioning a street, avenue, etc. 
+          If there is not an instruction set, just say 'Ooops! it seems there are not valid instructions.'
+          Answer the user in $openAIlenguage. 
+          """,
         ),
       ],
       role: OpenAIChatMessageRole.assistant,
