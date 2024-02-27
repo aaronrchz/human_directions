@@ -1,5 +1,6 @@
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
+import 'package:human_directios/componets/places.dart';
 
 class HumanDirections {
   /* flags */
@@ -11,6 +12,9 @@ class HumanDirections {
   List<Step>? steps = [];
   String requestResult = 'awaiting';
   String? humanDirectionsResult = '';
+  PlacesController nearbyplacesController = PlacesController();
+  List<String> nearbyPlacesFrom = [];
+  List<String> nearbyPlacesTo = [];
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
@@ -35,12 +39,14 @@ class HumanDirections {
   int get fetchHumanDirectionsFlag => humanDirectionsFlag;
   String? get updateFetchHumanDirections => humanDirectionsResult;
   /*Methods */
-  int fetchHumanDirections(String origin, String destination) {
-    _fetchDirections(origin, destination);
+  int fetchHumanDirections(String origin, String destination,
+      {double placesRadious = 50.0}) {
+    _fetchDirections(origin, destination, placesRadious: placesRadious);
     return 0;
   }
 
-  int _fetchDirections(String origin, String destination) {
+  int _fetchDirections(String origin, String destination,
+      {double placesRadious = 50.0}) {
     DirectionsService directionsService = DirectionsService();
     DirectionsService.init(googleDirectionsApiKey);
 
@@ -57,14 +63,8 @@ class HumanDirections {
         resolvedDistance.text = response.routes![0].legs![0].distance?.text;
         resolvedTime.text = response.routes![0].legs![0].duration?.text;
         steps = response.routes![0].legs![0].steps;
-        for (int i = 0; i < (steps?.length ?? 0); i++) {
-          String currentDir =
-              '${i + 1} - From: ${steps?[i].startLocation.toString()} to: ${steps?[i].endLocation.toString()}, Instructions: ${steps?[i].instructions},Distance:${steps?[i].distance?.text}  ,Time:${steps?[i].duration?.text}  , Maneuver: ${steps?[i].maneuver}\n';
-          prompt = prompt + currentDir;
-        }
-        _gptPrompt(prompt);
-        resultFlag = 0;
         requestResult = 'OK';
+        _buildAndPost(placesRadious: placesRadious);
       } else {
         resultFlag = -1;
         requestResult = 'Error: $status';
@@ -78,7 +78,7 @@ class HumanDirections {
     final systemMessage = OpenAIChatCompletionChoiceMessageModel(
       content: [
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          "At the start of your response put the imput message you received",
+          "Use casual lenguage",
         ),
       ],
       role: OpenAIChatMessageRole.assistant,
@@ -105,6 +105,29 @@ class HumanDirections {
     humanDirectionsResult = chat.choices[0].message.content?[0].text;
 
     humanDirectionsFlag = 0;
+  }
+
+  Future<void> _getAllNearbyPlaces({double placesRadious = 50.0}) async {
+    for (int i = 0; i < (steps?.length ?? 0); i++) {
+      nearbyPlacesFrom.add(
+          await nearbyplacesController.fetchAndSummarizeNearbyPlaces(
+              steps?[i].startLocation, placesRadious));
+    }
+    for (int i = 0; i < (steps?.length ?? 0); i++) {
+      nearbyPlacesTo.add(await nearbyplacesController
+          .fetchAndSummarizeNearbyPlaces(steps?[i].endLocation, placesRadious));
+    }
+  }
+
+  Future<void> _buildAndPost({double placesRadious = 50.0}) async {
+    await _getAllNearbyPlaces(placesRadious: placesRadious);
+    for (int i = 0; i < (steps?.length ?? 0); i++) {
+      String currentDir =
+          '${i + 1} - From: ${steps?[i].startLocation.toString()} (Nearby Places: ${nearbyPlacesFrom[i]} ),to: ${steps?[i].endLocation.toString()} (Nearby Places: ${nearbyPlacesTo[i]}), Instructions: ${steps?[i].instructions},Distance:${steps?[i].distance?.text}  ,Time:${steps?[i].duration?.text}  , Maneuver: ${steps?[i].maneuver}\n';
+      prompt = prompt + currentDir;
+    }
+    _gptPrompt(prompt);
+    resultFlag = 0;
   }
 }
 

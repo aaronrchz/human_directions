@@ -19,5 +19,9 @@ OPENAI_API_KEY=key
 GOOGLE_DIRECTIOS_API_KEY=key
 ### Dependencies.
 dart_openai: ^5.1.0 : https://pub.dev/packages/dart_openai
+
 google_directions_api: ^0.10.0 : https://pub.dev/packages/google_directions_api/example
+
 flutter_dotenv: ^5.1.0 : https://pub.dev/packages/flutter_dotenv
+
+flutter_google_places_sdk: ^0.3.7 : https://pub.dev/packages/flutter_google_places_sdk

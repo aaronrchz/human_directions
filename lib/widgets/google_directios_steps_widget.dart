@@ -2,8 +2,15 @@ import 'package:flutter/material.dart' hide Step;
 import 'package:google_directions_api/google_directions_api.dart';
 
 class GoogleDirectionsSteps extends StatefulWidget {
-  const GoogleDirectionsSteps({required this.steps, super.key});
+  const GoogleDirectionsSteps({
+    required this.steps,
+    required this.nearbyPlacesFrom,
+    required this.nearbyPlacesTo,
+    super.key,
+  });
   final List<Step>? steps;
+  final List<String> nearbyPlacesFrom;
+  final List<String> nearbyPlacesTo;
   @override
   State<GoogleDirectionsSteps> createState() => _GoogleDirectiosStepsState();
 }
@@ -12,6 +19,8 @@ class _GoogleDirectiosStepsState extends State<GoogleDirectionsSteps> {
   @override
   Widget build(BuildContext context) {
     int stepsCounter = 1;
+    int auxStepCounter = 0;
+    int auxStepCounter1 = 0;
     return SizedBox(
       height: 170,
       width: 390,
@@ -44,11 +53,16 @@ class _GoogleDirectiosStepsState extends State<GoogleDirectionsSteps> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text('De: ${e.startLocation.toString()}'),
+                                Text(
+                                    'Lugares cercanos: ${widget.nearbyPlacesFrom[auxStepCounter++]}'),
                               Text('Hacia: ${e.endLocation.toString()}'),
+                                Text(
+                                    'Lugares cercanos: ${widget.nearbyPlacesTo[auxStepCounter1++]}'),
                               Text('Distamcia: ${e.distance?.text}'),
                               Text('Duración Estimada: ${e.duration?.text} '),
                               Text('Instrucciones: ${e.instructions}'),
-                              if (e.maneuver != null) Text('Maniobra: ${e.maneuver}'),
+                              if (e.maneuver != null)
+                                Text('Maniobra: ${e.maneuver}'),
                               const SizedBox(
                                 height: 5,
                               ),

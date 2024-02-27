@@ -54,8 +54,12 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
           requestResult = directions.requestResult;
           resolvedDistance = directions.resolvedDistance;
           resolvedTime = directions.resolvedTime;
-          googleDirectionsStepsWidget =
-              GoogleDirectionsSteps(steps: directions.steps);
+          print(directions.nearbyPlacesFrom.length);
+          googleDirectionsStepsWidget = GoogleDirectionsSteps(
+            steps: directions.steps,
+            nearbyPlacesFrom: directions.nearbyPlacesFrom,
+            nearbyPlacesTo: directions.nearbyPlacesTo,
+          );
         }
         if (directions.humanDirectionsFlag == 0) {
           humanDirectionsWidget = HumanStepsWidget(
