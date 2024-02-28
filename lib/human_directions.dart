@@ -24,6 +24,7 @@ class HumanDirections {
   String googlelenguage;
   UnitSystem unitSystem;
   TravelMode travelMode;
+  double placesRadious;
 
   HumanDirections({
     required this.openAiApiKey,
@@ -32,7 +33,8 @@ class HumanDirections {
     this.googlelenguage = 'en',
     this.unitSystem = UnitSystem.metric,
     this.travelMode = TravelMode.walking,
-    this.openAIlenguage = OpenAILenguage.en
+    this.openAIlenguage = OpenAILenguage.en,
+    this.placesRadious = 10.0
   });
   /* getters */
   List<Step>? get directionsStepsList => steps;
@@ -66,7 +68,7 @@ class HumanDirections {
         resolvedTime.text = response.routes![0].legs![0].duration?.text;
         steps = response.routes![0].legs![0].steps;
         requestResult = 'OK';
-        _buildAndPost(placesRadious: placesRadious);
+        _buildAndPost();
       } else {
         resultFlag = -1;
         requestResult = 'Error: $status';
@@ -82,8 +84,9 @@ class HumanDirections {
         OpenAIChatCompletionChoiceMessageContentItemModel.text(
           """
           Convert this instruction set to a more human-friendly format. 
-          Assume this person does not know how to navigate the city. 
-          Specify when mentioning a street, avenue, etc. 
+          Specify when mentioning a street, avenue, etc.
+          Be extra friendly.
+          Always use the given nearby places to better guide the user.
           If there is not an instruction set, just say 'Ooops! it seems there are not valid instructions.'
           Answer the user in $openAIlenguage. 
           """,
@@ -115,7 +118,7 @@ class HumanDirections {
     humanDirectionsFlag = 0;
   }
 
-  Future<void> _getAllNearbyPlaces({double placesRadious = 50.0}) async {
+  Future<void> _getAllNearbyPlaces() async {
     for (int i = 0; i < (steps?.length ?? 0); i++) {
       nearbyPlacesFrom.add(
           await nearbyplacesController.fetchAndSummarizeNearbyPlaces(
@@ -127,11 +130,11 @@ class HumanDirections {
     }
   }
 
-  Future<void> _buildAndPost({double placesRadious = 50.0}) async {
-    await _getAllNearbyPlaces(placesRadious: placesRadious);
+  Future<void> _buildAndPost() async {
+    await _getAllNearbyPlaces();
     for (int i = 0; i < (steps?.length ?? 0); i++) {
       String currentDir =
-          '${i + 1} - From: ${steps?[i].startLocation.toString()} (Nearby Places: ${nearbyPlacesFrom[i]} ),to: ${steps?[i].endLocation.toString()} (Nearby Places: ${nearbyPlacesTo[i]}), Instructions: ${steps?[i].instructions},Distance:${steps?[i].distance?.text}  ,Time:${steps?[i].duration?.text}  , Maneuver: ${steps?[i].maneuver}\n';
+          '${i + 1} - From: ${steps?[i].startLocation.toString()} (Nearby Places: ${nearbyPlacesFrom[i]} ),to: ${steps?[i].endLocation.toString()} (Nearby Places: ${nearbyPlacesTo[i]}), Instructions: ${steps?[i].instructions},Distance:${steps?[i].distance?.text}  ,Time:${steps?[i].duration?.text}  , Maneuver: ${steps?[i].maneuver} \n';
       prompt = prompt + currentDir;
     }
     _gptPrompt(prompt);

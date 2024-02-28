@@ -33,6 +33,8 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
   @override
   void initState() {
     super.initState();
+    _originFieldController.text = '34 Bd Garibaldi, 75015 Paris, Francia';
+    _destinationFieldController.text = 'Champ de Mars, 5 Av. Anatole France, 75007 Paris, Francia';
   }
 
   void _fetchDirections() async {
@@ -104,6 +106,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
               children: [
                 TextField(
                   controller: _originFieldController,
+                  
                   decoration: const InputDecoration(
                     labelText: 'Origen',
                   ),

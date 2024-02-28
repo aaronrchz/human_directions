@@ -11,6 +11,10 @@ For the moment, this project is aimed to be on a mobile device, hence the main f
 
 to get the directions, after building the object of class HumanDirections (Which requires two api keys, GoogleDirections and openAI), it is needed to call the method fetchHumanDirections giving the origin and destination as arguments. Then you can access the data output through the members of the object class HumanDirections. But the main member is called humanDirectionsResult which contains the chatgpt output as a string.
 
+### Example App
+Using the app provided, it is possible to test the package just using the UI by providing an origin and destination in the corresponding text fields.
+The preferred format for the inputs would be as full address, for example Champ de Mars, 5 Av. Anatole France, 75007 Paris, France (the Eiffel Tower address), however it also works with geo-coords, and partial addresses, however in the last case the results could be unexpected as the Google directions API will have to guess the missing parts.
+
 ## Requirements
 ### Api keys
 the api keys must be in a file called '.env' inside the assets folder.
