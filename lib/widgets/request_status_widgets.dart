@@ -8,6 +8,14 @@ class WaitingForUserInput extends StatelessWidget{
     return const Text('Waiting For User input');
   }
 }
+class ErrorOnRequestWidget extends StatelessWidget{
+  const ErrorOnRequestWidget(this.message,{super.key});
+  final String message;
+  @override
+  Widget build(BuildContext context){
+    return Text('Error on request: $message');
+  }
+}
 /*Waiting for request result */
 class WaitingRequestResult extends StatefulWidget{
   const WaitingRequestResult({required this.statusMessage,super.key});

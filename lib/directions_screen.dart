@@ -60,12 +60,20 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
           requestResult = directions.requestResult;
           resolvedDistance = directions.resolvedDistance;
           resolvedTime = directions.resolvedTime;
-          print(directions.nearbyPlacesFrom.length);
           googleDirectionsStepsWidget = GoogleDirectionsSteps(
             steps: directions.steps,
             nearbyPlacesFrom: directions.nearbyPlacesFrom,
             nearbyPlacesTo: directions.nearbyPlacesTo,
           );
+        }
+        if(directions.fetchResultFlag > 1){
+          googleDirectionsStepsWidget = ErrorOnRequestWidget(directions.directionsRequestResult);
+          humanDirectionsWidget = ErrorOnRequestWidget('Error on directions_api ${directions.directionsRequestResult}');
+          timer.cancel();
+        }
+        if(directions.humanDirectionsFlag > 1){
+          humanDirectionsWidget = ErrorOnRequestWidget(directions.updateFetchHumanDirections ?? 'Unknown error');
+          timer.cancel();
         }
         if (directions.humanDirectionsFlag == 0) {
           humanDirectionsWidget = HumanStepsWidget(
@@ -87,6 +95,11 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
       origin = tempOrigin;
       destination = tempDestination;
       _fetchDirections();
+    }else{
+      setState(() {
+        googleDirectionsStepsWidget = const ErrorOnRequestWidget('Entrada invalida');
+        humanDirectionsWidget = const ErrorOnRequestWidget('Entrada invalida');
+      }); 
     }
   }
 

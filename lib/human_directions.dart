@@ -26,16 +26,15 @@ class HumanDirections {
   TravelMode travelMode;
   double placesRadious;
 
-  HumanDirections({
-    required this.openAiApiKey,
-    required this.googleDirectionsApiKey,
-    this.prompt = '\n',
-    this.googlelenguage = 'en',
-    this.unitSystem = UnitSystem.metric,
-    this.travelMode = TravelMode.walking,
-    this.openAIlenguage = OpenAILenguage.en,
-    this.placesRadious = 10.0
-  });
+  HumanDirections(
+      {required this.openAiApiKey,
+      required this.googleDirectionsApiKey,
+      this.prompt = '\n',
+      this.googlelenguage = 'en',
+      this.unitSystem = UnitSystem.metric,
+      this.travelMode = TravelMode.walking,
+      this.openAIlenguage = OpenAILenguage.en,
+      this.placesRadious = 10.0});
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => requestResult;
@@ -70,8 +69,8 @@ class HumanDirections {
         requestResult = 'OK';
         _buildAndPost();
       } else {
-        resultFlag = -1;
-        requestResult = 'Error: $status';
+        resultFlag = 2;
+        requestResult = 'Error: $status : ${response.errorMessage}';
       }
     });
     return resultFlag;
@@ -109,13 +108,18 @@ class HumanDirections {
       userMessage,
     ];
 
-    final chat = await OpenAI.instance.chat.create(
-      model: "gpt-4",
-      messages: requestMessages,
-    );
-    humanDirectionsResult = chat.choices[0].message.content?[0].text;
+    try {
+      final chat = await OpenAI.instance.chat.create(
+        model: "gpt-4",
+        messages: requestMessages,
+      );
+      humanDirectionsResult = chat.choices[0].message.content?[0].text;
 
-    humanDirectionsFlag = 0;
+      humanDirectionsFlag = 0;
+    } catch (e) {
+      humanDirectionsResult = 'Exception: $e';
+      humanDirectionsFlag = 2;
+    }
   }
 
   Future<void> _getAllNearbyPlaces() async {
