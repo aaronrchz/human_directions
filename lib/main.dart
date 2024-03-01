@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:human_directios/componets/location.dart';
 import 'package:human_directios/directions_screen.dart';
 
 void main() async {
   await dotenv.load(fileName: 'assets/.env');
-  runApp( MyApp());
+  runApp( const GeolocatorAppExample());
 }
 
 class MyApp extends StatelessWidget {
