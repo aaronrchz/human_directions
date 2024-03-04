@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart' hide Step;
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:human_directios/componets/places.dart';
 import 'package:human_directios/componets/supported_lenguages.dart';
+import 'package:human_directios/componets/location.dart';
 
 class HumanDirections {
   /* flags */
@@ -16,6 +18,7 @@ class HumanDirections {
   PlacesController nearbyplacesController = PlacesController();
   List<String> nearbyPlacesFrom = [];
   List<String> nearbyPlacesTo = [];
+  GeoCoord? currentPosition;
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
@@ -46,6 +49,18 @@ class HumanDirections {
       {double placesRadious = 50.0}) {
     _fetchDirections(origin, destination, placesRadious: placesRadious);
     return 0;
+  }
+
+  int fetchHumanDirectionsFromLocation(String destination, {double placesRadious = 50.0}){
+    if (currentPosition == null){
+      return 1;
+    }
+    _fetchDirections('${currentPosition?.latitude},${currentPosition?.longitude}' ,destination, placesRadious: placesRadious);
+    return 0;
+  }
+
+  Future<void> getCurrentLocation  (BuildContext context) async{
+    currentPosition = await GeoLocatorHandler().getLocation(context);
   }
 
   int _fetchDirections(String origin, String destination,

@@ -1,42 +1,30 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
+import 'package:google_directions_api/google_directions_api.dart';
 
-class GeolocatorAppExample extends StatelessWidget {
-  const GeolocatorAppExample({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Obtener Posición GPS'),
-        ),
-        body: Center(
-          child: ElevatedButton(
-            onPressed: () {
-              getLocation(context);
-            },
-            child: const Text('Obtener Ubicación'),
-          ),
-        ),
-      ),
-    );
-  
- }
- Future<String> getLocation(BuildContext context) async {
-    
-        LocationPermission permission = await Geolocator.checkPermission();
+class GeoLocatorHandler{
+String? errorMessage;
+GeoCoord? lastKnownPosition;
+Future<GeoCoord?> getLocation(BuildContext context) async {
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        if(!context.mounted) return 'Context error';
+        if(!context.mounted)
+        {
+          errorMessage = 'Context not mounted';
+          return null ;
+        } 
         _askLocationPermisionDialog(context);
-        return 'Permission missing';
+        errorMessage = 'User permission needed';
+        return null;
       }
     }
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
-    return 'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
+    lastKnownPosition = GeoCoord(position.latitude, position.longitude);
+    return GeoCoord(position.latitude, position.longitude);
   }
   Future <void> _askLocationPermisionDialog(BuildContext context){
      BuildContext localContext = context;
