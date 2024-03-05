@@ -24,6 +24,10 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
   String requestResult = '';
   Distance resolvedDistance = Distance();
   Time resolvedTime = Time();
+  bool useGeoLocation = false;
+  bool enableDirectionsButton = true;
+
+  late HumanDirections directions;
 
   Widget googleDirectionsStepsWidget = const WaitingForUserInput();
   Widget humanDirectionsWidget = const WaitingForUserInput();
@@ -33,18 +37,23 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
   @override
   void initState() {
     super.initState();
+    directions = HumanDirections(
+      openAiApiKey: widget.openAiApiKey,
+      googleDirectionsApiKey: widget.googleDirectionsApiKey,
+      openAIlenguage: OpenAILenguage.es,
+      googlelenguage: 'es-419',
+    );
     _originFieldController.text = '34 Bd Garibaldi, 75015 Paris, Francia';
-    _destinationFieldController.text = 'Champ de Mars, 5 Av. Anatole France, 75007 Paris, Francia';
+    _destinationFieldController.text =
+        'Champ de Mars, 5 Av. Anatole France, 75007 Paris, Francia';
   }
 
   void _fetchDirections() async {
-    HumanDirections directions = HumanDirections(
-        openAiApiKey: widget.openAiApiKey,
-        googleDirectionsApiKey: widget.googleDirectionsApiKey,
-        openAIlenguage: OpenAILenguage.es,
-        googlelenguage: 'es-419',
-        );
-    directions.fetchHumanDirections(origin, destination);
+    if(useGeoLocation){
+      directions.fetchHumanDirectionsFromLocation(destination);
+    }else{
+      directions.fetchHumanDirections(origin, destination);
+    }
     setState(() {
       googleDirectionsStepsWidget = const WaitingRequestResult(
           statusMessage:
@@ -66,13 +75,16 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
             nearbyPlacesTo: directions.nearbyPlacesTo,
           );
         }
-        if(directions.fetchResultFlag > 1){
-          googleDirectionsStepsWidget = ErrorOnRequestWidget(directions.directionsRequestResult);
-          humanDirectionsWidget = ErrorOnRequestWidget('Error on directions_api ${directions.directionsRequestResult}');
+        if (directions.fetchResultFlag > 1) {
+          googleDirectionsStepsWidget =
+              ErrorOnRequestWidget(directions.directionsRequestResult);
+          humanDirectionsWidget = ErrorOnRequestWidget(
+              'Error on directions_api ${directions.directionsRequestResult}');
           timer.cancel();
         }
-        if(directions.humanDirectionsFlag > 1){
-          humanDirectionsWidget = ErrorOnRequestWidget(directions.updateFetchHumanDirections ?? 'Unknown error');
+        if (directions.humanDirectionsFlag > 1) {
+          humanDirectionsWidget = ErrorOnRequestWidget(
+              directions.updateFetchHumanDirections ?? 'Unknown error');
           timer.cancel();
         }
         if (directions.humanDirectionsFlag == 0) {
@@ -88,18 +100,19 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
     });
   }
 
-  void _getUserFields() {
+  void _getUserFieldsAndFetchHumanDirections() {
     String tempOrigin = _originFieldController.text;
     String tempDestination = _destinationFieldController.text;
     if (tempOrigin.isNotEmpty && tempDestination.isNotEmpty) {
       origin = tempOrigin;
       destination = tempDestination;
       _fetchDirections();
-    }else{
+    } else {
       setState(() {
-        googleDirectionsStepsWidget = const ErrorOnRequestWidget('Entrada invalida');
+        googleDirectionsStepsWidget =
+            const ErrorOnRequestWidget('Entrada invalida');
         humanDirectionsWidget = const ErrorOnRequestWidget('Entrada invalida');
-      }); 
+      });
     }
   }
 
@@ -117,9 +130,39 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
                 const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
             child: Column(
               children: [
+                Row(
+                  children: [
+                    Checkbox(
+                      value: useGeoLocation,
+                      onChanged: (bool? value) async {
+                        enableDirectionsButton = false;
+                        setState(() {
+                          useGeoLocation = value!;
+                        });
+                        if (useGeoLocation) {
+                          await directions.getCurrentLocation(context);
+                          if (directions.currentPosition != null) {
+                            _originFieldController.text =
+                                'Latitud: ${directions.currentPosition!.latitude}, Longitud: ${directions.currentPosition!.longitude}';
+                          }
+                        } else {
+                          _originFieldController.clear();
+                        }
+                        enableDirectionsButton = true;
+                        setState(() {
+                          
+                        });
+                      },
+                    ),
+                    const Text(
+                      'Usar ubicación actual',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
                 TextField(
                   controller: _originFieldController,
-                  
+                  enabled: !useGeoLocation,
                   decoration: const InputDecoration(
                     labelText: 'Origen',
                   ),
@@ -136,7 +179,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: _getUserFields,
+                      onPressed: enableDirectionsButton ? _getUserFieldsAndFetchHumanDirections : null,
                       child: const Text('Get Directions'),
                     ),
                     const SizedBox(
