@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide Step;
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:human_directios/componets/places.dart';
+import 'package:human_directios/componets/places_types.dart';
 import 'package:human_directios/componets/supported_lenguages.dart';
 import 'package:human_directios/componets/location.dart';
 
@@ -51,15 +52,19 @@ class HumanDirections {
     return 0;
   }
 
-  int fetchHumanDirectionsFromLocation(String destination, {double placesRadious = 50.0}){
-    if (currentPosition == null){
+  int fetchHumanDirectionsFromLocation(String destination,
+      {double placesRadious = 50.0}) {
+    if (currentPosition == null) {
       return 1;
     }
-    _fetchDirections('${currentPosition?.latitude},${currentPosition?.longitude}' ,destination, placesRadious: placesRadious);
+    _fetchDirections(
+        '${currentPosition?.latitude},${currentPosition?.longitude}',
+        destination,
+        placesRadious: placesRadious);
     return 0;
   }
 
-  Future<void> getCurrentLocation  (BuildContext context) async{
+  Future<void> getCurrentLocation(BuildContext context) async {
     currentPosition = await GeoLocatorHandler().getLocation(context);
   }
 
@@ -122,7 +127,27 @@ class HumanDirections {
       systemMessage,
       userMessage,
     ];
-
+    const tools = OpenAIToolModel(
+        type: 'function',
+        function: OpenAIFunctionModel(
+            name: 'get_nearby_places',
+            description: 'Get nearbyplaces',
+            parametersSchema: {
+              'type': 'object',
+              'properties': {
+                'location': {
+                  'type': 'string',
+                  'description':
+                      'The address or the geolocation as latitude and longitude',
+                },
+                'category': {
+                  'type':'string',
+                  'enum' : [PlaceType.any, PlaceType.accounting], //polaceholder
+                  'description': 'the place categry, e.g. book_store, cafe'
+                }
+              },
+              'required': ['location', 'category'],
+            }));
     try {
       final chat = await OpenAI.instance.chat.create(
         model: "gpt-4",

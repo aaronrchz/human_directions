@@ -7,6 +7,8 @@ import 'package:human_directios/componets/places_types.dart';
 class PlacesController{
 String placesSummary = '';
 int summaryFlag = 0;
+String responseBody = '';
+Map<String, String>? responseHeaders;
 
 Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, double radius,
     {String type = PlaceType.any}) async {
@@ -18,6 +20,8 @@ Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, double radius,
 
   if (response.statusCode == 200) {
     final Map<String, dynamic> data = json.decode(response.body);
+    responseBody = response.body;
+    responseHeaders =  response.headers;
     return data['results'];
   } else {
     throw Exception('Failed to load nearby places');
