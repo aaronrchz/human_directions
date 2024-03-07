@@ -10,7 +10,7 @@ int summaryFlag = 0;
 String responseBody = '';
 Map<String, String>? responseHeaders;
 
-Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, double radius,
+Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, num radius,
     {String type = PlaceType.any}) async {
   String apiKey = dotenv.env['GOOGLE_DIRECTIOS_API_KEY'] ?? 'NO SUCH KEY';
   String location = '${centerCoord.latitude},${centerCoord.longitude}';

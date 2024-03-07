@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart' hide Step;
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
@@ -127,27 +129,6 @@ class HumanDirections {
       systemMessage,
       userMessage,
     ];
-    const tools = OpenAIToolModel(
-        type: 'function',
-        function: OpenAIFunctionModel(
-            name: 'get_nearby_places',
-            description: 'Get nearbyplaces',
-            parametersSchema: {
-              'type': 'object',
-              'properties': {
-                'location': {
-                  'type': 'string',
-                  'description':
-                      'The address or the geolocation as latitude and longitude',
-                },
-                'category': {
-                  'type':'string',
-                  'enum' : [PlaceType.any, PlaceType.accounting], //polaceholder
-                  'description': 'the place categry, e.g. book_store, cafe'
-                }
-              },
-              'required': ['location', 'category'],
-            }));
     try {
       final chat = await OpenAI.instance.chat.create(
         model: "gpt-4",
@@ -159,6 +140,108 @@ class HumanDirections {
     } catch (e) {
       humanDirectionsResult = 'Exception: $e';
       humanDirectionsFlag = 2;
+    }
+  }
+
+  Future<void> gptPromptNearbyPlaces(String prompt, GeoCoord location) async {
+    try {
+      OpenAI.apiKey = openAiApiKey;
+      final systemMessage = OpenAIChatCompletionChoiceMessageModel(
+        content: [
+          OpenAIChatCompletionChoiceMessageContentItemModel.text(
+            """
+          The user will give thier location and ask for recommendations about were to g
+          o in the following text, please extract and deliverone of the following categories:
+          getegories: $placesTypesList
+          answer the user in: $openAIlenguage.
+          """,
+          ),
+        ],
+        role: OpenAIChatMessageRole.assistant,
+      );
+
+      final userMessage = OpenAIChatCompletionChoiceMessageModel(
+        content: [
+          OpenAIChatCompletionChoiceMessageContentItemModel.text(
+            'location(${location.latitude}, ${location.longitude}), $prompt',
+          ),
+        ],
+        role: OpenAIChatMessageRole.user,
+      );
+
+      final requestMessages = [systemMessage, userMessage];
+
+      final tools = OpenAIToolModel(
+        type: 'function',
+        function: OpenAIFunctionModel.withParameters(
+            name: 'fetchNearbyPlaces',
+            description: 'obtain nearby places',
+            parameters: [
+              OpenAIFunctionProperty.number(
+                  name: 'latitude',
+                  description: 'the user location latitude value'),
+              OpenAIFunctionProperty.number(
+                  name: 'longitude',
+                  description: 'the user location longitude value'),
+              OpenAIFunctionProperty.string(
+                  name: 'category',
+                  description: 'Place category, e.g. bar, library',
+                  enumValues: placesTypesList),
+              OpenAIFunctionProperty.number(
+                  name: 'radius',
+                  description:
+                      'radius in meters around the user location where the places are going to be looked up to'),
+            ],
+            ),
+      );
+      final chat = await OpenAI.instance.chat.create(
+        model: "gpt-4",
+        messages: requestMessages,
+        tools: [tools],
+      );
+      if (chat.choices.isNotEmpty) {
+        final responseMessage = chat.choices[0].message;
+        final toolCalls = responseMessage.toolCalls;
+        requestMessages.add(responseMessage);
+        if (toolCalls != null) {
+          final availableFunctions = {
+            'fetchNearbyPlaces': nearbyplacesController.fetchNearbyPlaces,
+          };
+
+          for (var element in toolCalls) {
+            print(element);
+            final functionName = element.function.name;
+            final functionToCall = availableFunctions[functionName];
+            final functionArgs = jsonDecode(element.function.arguments);
+            final functionResponse = functionToCall!(
+              GeoCoord(functionArgs['latitude'], functionArgs['longitude']),
+              functionArgs['radius'],
+              type: functionArgs['category'],
+            );
+
+            requestMessages.add(
+              OpenAIChatCompletionChoiceMessageModel(
+                content: [
+                  OpenAIChatCompletionChoiceMessageContentItemModel.text(
+                    functionResponse.toString(),
+                  ),
+                ],
+                role: OpenAIChatMessageRole.tool,
+                toolCalls: [element],
+              ),
+            );
+          }
+        }
+      }
+
+      final secondChat = await OpenAI.instance.chat
+          .create(model: "gpt-4", messages: requestMessages, tools: [tools]);
+
+      final secondResponseMessage =
+          secondChat.choices[0].message.content?[0].text;
+      print(secondResponseMessage);
+    } catch (e) {
+      print('Exception: $e');
     }
   }
 

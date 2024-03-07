@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:human_directios/directions_screen.dart';
 import 'package:human_directios/home_screen.dart';
+import 'package:human_directios/human_directions.dart';
 
 void main() async {
   await dotenv.load(fileName: 'assets/.env');
@@ -24,9 +25,15 @@ class _HumanDirectionsAppState extends State<HumanDirectionsApp>{
       currentScreen = DirectionsScreen(openAiApiKey: widget.openAiApiKey, googleDirectionsApiKey: widget.googleDirectionsApiKey);
     });
   }
-  void goToNearbyDirectionsScreen(){
+  void goToNearbyDirectionsScreen() async{
+    HumanDirections testController = HumanDirections(openAiApiKey: widget.openAiApiKey, googleDirectionsApiKey: widget.googleDirectionsApiKey);
+      await testController.getCurrentLocation(context);
+      print(testController.currentPosition);
+      await testController.gptPromptNearbyPlaces('Where can i get a drink', testController.currentPosition!); 
     setState(() {
-      currentScreen = const Text('Work in progress');
+      
+      currentScreen = const 
+      Scaffold(body: Text('Work in progress'),);
     });
   }
   @override
