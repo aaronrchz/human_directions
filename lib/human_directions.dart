@@ -150,9 +150,10 @@ class HumanDirections {
         content: [
           OpenAIChatCompletionChoiceMessageContentItemModel.text(
             """
-          The user will give thier location and ask for recommendations about were to g
-          o in the following text, please extract and deliverone of the following categories:
+          The user will give thier location and ask for recommendations about were to go
+          in the following text, please extract and deliver one of the following categories:
           getegories: $placesTypesList
+          however if the place is not open at the moment do not recommend it or mark it as closed.
           answer the user in: $openAIlenguage.
           """,
           ),
