@@ -61,10 +61,10 @@ packages:
     dependency: "direct main"
     description:
       name: dart_openai
-      sha256: "963939b54e841ac7f663d958afd3d595f3e48b1887a367ff582b9f82220bee78"
+      sha256: "853bb57fed6a71c3ba0324af5cb40c16d196cf3aa55b91d244964ae4a241ccf1"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.0"
+    version: "5.1.0"
   fake_async:
     dependency: transitive
     description:

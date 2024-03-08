@@ -143,7 +143,7 @@ class HumanDirections {
     }
   }
 
-  Future<void> gptPromptNearbyPlaces(String prompt, GeoCoord location) async {
+  Future<String> gptPromptNearbyPlaces(String prompt, GeoCoord location) async {
     try {
       OpenAI.apiKey = openAiApiKey;
       final systemMessage = OpenAIChatCompletionChoiceMessageModel(
@@ -214,12 +214,13 @@ class HumanDirections {
               GeoCoord(latitude, longitude), radius,
               type: category);
           requestMessages.add(message);
-          requestMessages.add(OpenAIChatCompletionChoiceMessageModel(
-            role: OpenAIChatMessageRole.function,
+          requestMessages.add(RequestFunctionMessage(
+            role: OpenAIChatMessageRole.tool,
             content: [
-              OpenAIChatCompletionChoiceMessageContentItemModel.text('Results: $result')
+              OpenAIChatCompletionChoiceMessageContentItemModel.text(
+                  'Results: $result')
             ],
-            toolCalls: [call],
+            toolCallId: call.id!,
           ));
         }
       }
@@ -228,9 +229,13 @@ class HumanDirections {
 
       final secondResponseMessage =
           secondChat.choices[0].message.content?[0].text;
-      print(secondResponseMessage);
+      if (secondResponseMessage != null) {
+        return secondResponseMessage;
+      } else {
+        return 'Response from llm is empty';
+      }
     } catch (e) {
-      print('Exception: $e');
+      return 'Exception: $e';
     }
   }
 
