@@ -174,66 +174,55 @@ class HumanDirections {
       final tools = OpenAIToolModel(
         type: 'function',
         function: OpenAIFunctionModel.withParameters(
-            name: 'fetchNearbyPlaces',
-            description: 'obtain nearby places',
-            parameters: [
-              OpenAIFunctionProperty.number(
-                  name: 'latitude',
-                  description: 'the user location latitude value'),
-              OpenAIFunctionProperty.number(
-                  name: 'longitude',
-                  description: 'the user location longitude value'),
-              OpenAIFunctionProperty.string(
-                  name: 'category',
-                  description: 'Place category, e.g. bar, library',
-                  enumValues: placesTypesList),
-              OpenAIFunctionProperty.number(
-                  name: 'radius',
-                  description:
-                      'radius in meters around the user location where the places are going to be looked up to'),
-            ],
-            ),
+          name: 'fetchNearbyPlaces',
+          description: 'obtain nearby places',
+          parameters: [
+            OpenAIFunctionProperty.number(
+                name: 'latitude',
+                description: 'the user location latitude value'),
+            OpenAIFunctionProperty.number(
+                name: 'longitude',
+                description: 'the user location longitude value'),
+            OpenAIFunctionProperty.string(
+                name: 'category',
+                description: 'Place category, e.g. bar, library',
+                enumValues: placesTypesList),
+            OpenAIFunctionProperty.number(
+                name: 'radius',
+                description:
+                    'radius in meters around the user location where the places are going to be looked up to'),
+          ],
+        ),
       );
       final chat = await OpenAI.instance.chat.create(
         model: "gpt-4",
         messages: requestMessages,
         tools: [tools],
       );
-      if (chat.choices.isNotEmpty) {
-        final responseMessage = chat.choices[0].message;
-        final toolCalls = responseMessage.toolCalls;
-        requestMessages.add(responseMessage);
-        if (toolCalls != null) {
-          final availableFunctions = {
-            'fetchNearbyPlaces': nearbyplacesController.fetchNearbyPlaces,
-          };
+      final message = chat.choices.first.message;
+      if (message.haveToolCalls) {
+        final call = message.toolCalls!.first;
+        if (call.function.name == 'fetchNearbyPlaces') {
+          final decodedArgs = jsonDecode(call.function.arguments);
 
-          for (var element in toolCalls) {
-            print(element);
-            final functionName = element.function.name;
-            final functionToCall = availableFunctions[functionName];
-            final functionArgs = jsonDecode(element.function.arguments);
-            final functionResponse = functionToCall!(
-              GeoCoord(functionArgs['latitude'], functionArgs['longitude']),
-              functionArgs['radius'],
-              type: functionArgs['category'],
-            );
+          final latitude = decodedArgs['latitude'];
+          final longitude = decodedArgs['longitude'];
+          final category = decodedArgs['category'];
+          final radius = decodedArgs['radius'];
 
-            requestMessages.add(
-              OpenAIChatCompletionChoiceMessageModel(
-                content: [
-                  OpenAIChatCompletionChoiceMessageContentItemModel.text(
-                    functionResponse.toString(),
-                  ),
-                ],
-                role: OpenAIChatMessageRole.tool,
-                toolCalls: [element],
-              ),
-            );
-          }
+          final result = await nearbyplacesController.fetchNearbyPlaces(
+              GeoCoord(latitude, longitude), radius,
+              type: category);
+          requestMessages.add(message);
+          requestMessages.add(OpenAIChatCompletionChoiceMessageModel(
+            role: OpenAIChatMessageRole.function,
+            content: [
+              OpenAIChatCompletionChoiceMessageContentItemModel.text('Results: $result')
+            ],
+            toolCalls: [call],
+          ));
         }
       }
-
       final secondChat = await OpenAI.instance.chat
           .create(model: "gpt-4", messages: requestMessages, tools: [tools]);
 
