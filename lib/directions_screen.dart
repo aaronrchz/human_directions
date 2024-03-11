@@ -42,6 +42,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
       googleDirectionsApiKey: widget.googleDirectionsApiKey,
       openAIlenguage: OpenAILenguage.es,
       googlelenguage: 'es-419',
+      placesRadious: 50,
     );
     _originFieldController.text = '34 Bd Garibaldi, 75015 Paris, Francia';
     _destinationFieldController.text =

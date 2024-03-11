@@ -7,6 +7,7 @@ import 'package:human_directios/componets/places.dart';
 import 'package:human_directios/componets/places_types.dart';
 import 'package:human_directios/componets/supported_lenguages.dart';
 import 'package:human_directios/componets/location.dart';
+import 'package:human_directios/componets/recomendations_parse.dart';
 
 class HumanDirections {
   /* flags */
@@ -40,7 +41,7 @@ class HumanDirections {
       this.unitSystem = UnitSystem.metric,
       this.travelMode = TravelMode.walking,
       this.openAIlenguage = OpenAILenguage.en,
-      this.placesRadious = 10.0});
+      this.placesRadious = 50.0});
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => requestResult;
@@ -48,21 +49,18 @@ class HumanDirections {
   int get fetchHumanDirectionsFlag => humanDirectionsFlag;
   String? get updateFetchHumanDirections => humanDirectionsResult;
   /*Methods */
-  int fetchHumanDirections(String origin, String destination,
-      {double placesRadious = 50.0}) {
-    _fetchDirections(origin, destination, placesRadious: placesRadious);
+  int fetchHumanDirections(String origin, String destination) {
+    _fetchDirections(origin, destination);
     return 0;
   }
 
-  int fetchHumanDirectionsFromLocation(String destination,
-      {double placesRadious = 50.0}) {
+  int fetchHumanDirectionsFromLocation(String destination) {
     if (currentPosition == null) {
       return 1;
     }
     _fetchDirections(
         '${currentPosition?.latitude},${currentPosition?.longitude}',
-        destination,
-        placesRadious: placesRadious);
+        destination);
     return 0;
   }
 
@@ -70,8 +68,7 @@ class HumanDirections {
     currentPosition = await GeoLocatorHandler().getLocation(context);
   }
 
-  int _fetchDirections(String origin, String destination,
-      {double placesRadious = 50.0}) {
+  int _fetchDirections(String origin, String destination) {
     DirectionsService directionsService = DirectionsService();
     DirectionsService.init(googleDirectionsApiKey);
 
@@ -143,7 +140,7 @@ class HumanDirections {
     }
   }
 
-  Future<String> gptPromptNearbyPlaces(String prompt, GeoCoord location) async {
+  Future<NearbyPlacesRecomendationsObject> gptPromptNearbyPlaces(String prompt, GeoCoord location) async {
     try {
       OpenAI.apiKey = openAiApiKey;
       final systemMessage = OpenAIChatCompletionChoiceMessageModel(
@@ -154,6 +151,20 @@ class HumanDirections {
           in the following text, please extract and deliver one of the following categories:
           getegories: $placesTypesList
           however if the place is not open at the moment do not recommend it or mark it as closed.
+          Avoid using Links.
+          The output mus be a map with the following format
+          {
+            'start_message': 'any messsage to give contex to the user',
+            'recommendations' : [{
+              'name': 'Place name',
+              'address': 'Place Address',
+              'rating': 'Place rating',
+              'description': 'Place Description',
+              'open_now': 'Is the place open',
+              'opening_hours': 'Place Opening hours' ,
+            }],
+            'closing_message': 'any messsage to give contex to the user' 
+          }
           answer the user in: $openAIlenguage.
           """,
           ),
@@ -176,7 +187,7 @@ class HumanDirections {
         type: 'function',
         function: OpenAIFunctionModel.withParameters(
           name: 'fetchNearbyPlaces',
-          description: 'obtain nearby places',
+          description: 'obtain nearby places, all parameters are required',
           parameters: [
             OpenAIFunctionProperty.number(
                 name: 'latitude',
@@ -193,6 +204,7 @@ class HumanDirections {
                 description:
                     'radius in meters around the user location where the places are going to be looked up to'),
           ],
+
         ),
       );
       final chat = await OpenAI.instance.chat.create(
@@ -211,7 +223,7 @@ class HumanDirections {
           final category = decodedArgs['category'];
           final radius = decodedArgs['radius'];
 
-          final result = await nearbyplacesController.fetchNearbyPlaces(
+          final result = await nearbyplacesController.simplifyFetchNearbyPlacess(
               GeoCoord(latitude, longitude), radius,
               type: category);
           requestMessages.add(message);
@@ -231,12 +243,12 @@ class HumanDirections {
       final secondResponseMessage =
           secondChat.choices[0].message.content?[0].text;
       if (secondResponseMessage != null) {
-        return secondResponseMessage;
+        return NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
       } else {
-        return 'Response from llm is empty';
+        return NearbyPlacesRecomendationsObject.fromError(Exception('LLM response is empty'));
       }
     } catch (e) {
-      return 'Exception: $e';
+      return NearbyPlacesRecomendationsObject.fromError(e);
     }
   }
 

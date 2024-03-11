@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_directions_api/google_directions_api.dart';
+import 'package:human_directios/componets/recomendations_parse.dart';
+import 'package:human_directios/componets/supported_lenguages.dart';
 import 'package:human_directios/human_directions.dart';
 
 class RequestDNearbyPlacesScreen extends StatefulWidget {
@@ -15,13 +18,17 @@ class RequestDNearbyPlacesScreen extends StatefulWidget {
 
 class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
   late HumanDirections directionsController;
-  final TextEditingController _textEditingController = TextEditingController();
-  late Future<String?> _futureResult;
+  final TextEditingController _textEditingController =
+      TextEditingController(text: 'donde hay un bar?');
+  late Future<NearbyPlacesRecomendationsObject?> _futureResult;
 
-  Future<String?> _handleSubmit() async {
+  Future<NearbyPlacesRecomendationsObject?> _handleSubmit() async {
     directionsController = HumanDirections(
         openAiApiKey: widget.openAiApiKey,
-        googleDirectionsApiKey: widget.googleDirectionsApiKey);
+        googleDirectionsApiKey: widget.googleDirectionsApiKey,
+        travelMode: TravelMode.walking,
+        unitSystem: UnitSystem.metric,
+        openAIlenguage: OpenAILenguage.es);
     String input = _textEditingController.text;
     await directionsController.getCurrentLocation(context);
     return await directionsController.gptPromptNearbyPlaces(
@@ -53,7 +60,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
               },
               child: const Text('Solicitar'),
             ),
-            FutureBuilder<String?>(
+            FutureBuilder<NearbyPlacesRecomendationsObject?>(
               future: _futureResult,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -61,7 +68,49 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else if (snapshot.hasData) {
-                  return Text(snapshot.data!);
+                  NearbyPlacesRecomendationsObject data = snapshot.data!;
+                  if (data.hasError) {
+                    print(data.errorMessage);
+                    return Text(data.errorMessage!);
+                  }
+                  if (data.recommendations != null) {
+                    return Column(
+                      children: [
+                        Text(data.startMessage ?? 'result:'),
+                        SingleChildScrollView(
+                          child: SizedBox(
+                            height:
+                                400, // Define una altura adecuada según tus necesidades
+                            child: ListView(
+                              padding: const EdgeInsets.all(8),
+                              children: [
+                                ...data.recommendations!.map((e) {
+                                  return ExpansionTile(
+                                    title: Text(e.name),
+                                    subtitle: Text(e.rating),
+                                    children: [
+                                      ListTile(
+                                        title: Text(e.description),
+                                      ),
+                                      TextButton(onPressed: (){}, child: const Text('¡Quiero ir!'),),
+                                    ],
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Text(data.closingMessage ?? 'end of result.'),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      children: [
+                        Text(data.startMessage!),
+                        Text(data.closingMessage!),
+                      ],
+                    );
+                  }
                 } else {
                   return Container();
                 }
