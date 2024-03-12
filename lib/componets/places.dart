@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:human_directios/componets/places_types.dart';
 
 class PlacesController {
@@ -9,11 +8,14 @@ class PlacesController {
   int summaryFlag = 0;
   String responseBody = '';
   Map<String, String>? responseHeaders;
+  String placesApiKey;
+
+  PlacesController({required this.placesApiKey});
 
   Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, num radius,
       {String type = PlaceType.any}) async {
-    String apiKey = dotenv.env['GOOGLE_DIRECTIOS_API_KEY'] ?? 'NO SUCH KEY';
-    const url = 'https://places.googleapis.com/v1/places:searchNearby';
+    String apiKey = placesApiKey;
+    const uri = 'https://places.googleapis.com/v1/places:searchNearby';
     final requestBodyPrototype = {
       "maxResultCount": 20,
       "locationRestriction": {
@@ -26,17 +28,17 @@ class PlacesController {
         }
       }
     };
-    if(type != PlaceType.any){
+    if (type != PlaceType.any) {
       requestBodyPrototype['includedTypes'] = [type];
     }
     final requestBody = jsonEncode(requestBodyPrototype);
     final response = await http.post(
-      Uri.parse(url),
+      Uri.parse(uri),
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
         'X-Goog-FieldMask':
-            'places.displayName,places.businessStatus,places.formattedAddress,places.name,places.types,places.rating,places.nationalPhoneNumber,places.regularOpeningHours',
+            'places.Id,places.displayName,places.businessStatus,places.formattedAddress,places.name,places.types,places.rating,places.nationalPhoneNumber,places.regularOpeningHours,places.photos',
       },
       body: requestBody,
     );
@@ -45,12 +47,13 @@ class PlacesController {
       final Map<String, dynamic> data = json.decode(response.body);
       responseBody = response.body;
       responseHeaders = response.headers;
-      if(data.isEmpty){
+      if (data.isEmpty) {
         return [];
       }
       return data['places'];
     } else {
-      throw Exception('Failed to load nearby places: ${response.statusCode}: ${response.body}');
+      throw Exception(
+          'Failed to load nearby places: ${response.statusCode}: ${response.body}');
     }
   }
 
@@ -62,6 +65,7 @@ class PlacesController {
       List<dynamic> result = [];
       for (var element in data) {
         result.add({
+          'placeId': element['placeId'],
           'name': element['displayName']['text'],
           'open_now': element['regularOpeningHours']['openNow'],
           'opening_hours': element['regularOpeningHours']
@@ -69,7 +73,7 @@ class PlacesController {
           'rating': element['rating'],
           'business_status': element['businessStatus'],
           'address': element['formattedAddress'],
-          'phone_number': element['nationalPhoneNumber']
+          'phone_number': element['nationalPhoneNumber'],
         });
       }
       return result;
@@ -89,7 +93,8 @@ class PlacesController {
       return 'No places nearby';
     }
     for (var element in places) {
-      summary = '$summary${element['displayName']['text']}(${element['types']}), ';
+      summary =
+          '$summary${element['displayName']['text']}(${element['types']}), ';
     }
     return summary;
   }
@@ -111,5 +116,65 @@ class PlacesController {
     } catch (e) {
       throw Exception('Failed to fetch and summarize nearby places: $e');
     }
+  }
+
+/*Work in progress */
+  Future<List<dynamic>> fetchPlacePhotosData(String place) async {
+    String uri = 'https://places.googleapis.com/v1/places/$place';
+    Map<String, String> headers = {
+      'ContentType': 'application/json',
+      'X-Goog-Api-Key': placesApiKey,
+      'X-Goog-FieldMask': 'places.photos'
+    };
+    final response = await http.post(Uri.parse(uri), headers: headers);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      responseBody = response.body;
+      responseHeaders = response.headers;
+      if (data.isEmpty) {
+        return [];
+      }
+      return data['photos'];
+    } else {
+      throw Exception(
+          'Failed to fetch places photos: ${response.statusCode}: ${response.body}');
+    }
+  }
+
+  Future<List<dynamic>> fetchPhotosUrl(List<dynamic> photos,
+      {int? width, int? height, int? maxOperations}) async {
+    int opCase = 0;
+    if (maxOperations != null) {
+      if (maxOperations > photos.length) {
+        throw Exception(
+            "Number of operations exceeds the lenght of the given list");
+      } else {
+        opCase = 1;
+      }
+    } else {
+      opCase = 0;
+    }
+    switch (opCase) {
+      case 0:
+        for (var photo in photos) {
+          String uri = 'https://places.googleapis.com/v1/${photo['name']}';
+          String key = '&key=$placesApiKey';
+        }
+        break;
+      case 1:
+        break;
+      default:
+        break;
+    }
+    return [];
+  }
+}
+
+class PlacePhotosDimentios {
+  final int width;
+  final int height;
+  PlacePhotosDimentios({required this.width, required this.height});
+  factory PlacePhotosDimentios.fromMap(Map<String, dynamic> map) {
+    return PlacePhotosDimentios(width: map['width'], height: map['height']);
   }
 }

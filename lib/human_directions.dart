@@ -19,7 +19,7 @@ class HumanDirections {
   List<Step>? steps = [];
   String requestResult = 'awaiting';
   String? humanDirectionsResult = '';
-  PlacesController nearbyplacesController = PlacesController();
+  PlacesController nearbyplacesController;
   List<String> nearbyPlacesFrom = [];
   List<String> nearbyPlacesTo = [];
   GeoCoord? currentPosition;
@@ -41,7 +41,7 @@ class HumanDirections {
       this.unitSystem = UnitSystem.metric,
       this.travelMode = TravelMode.walking,
       this.openAIlenguage = OpenAILenguage.en,
-      this.placesRadious = 50.0});
+      this.placesRadious = 50.0}) : nearbyplacesController = PlacesController(placesApiKey: googleDirectionsApiKey);
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => requestResult;
@@ -152,16 +152,17 @@ class HumanDirections {
           getegories: $placesTypesList
           however if the place is not open at the moment do not recommend it or mark it as closed.
           Avoid using Links.
-          The output mus be a map with the following format
+          The output mus be a map with the following format and none filed must be null:
           {
             'start_message': 'any messsage to give contex to the user',
             'recommendations' : [{
-              'name': 'Place name',
-              'address': 'Place Address',
-              'rating': 'Place rating',
-              'description': 'Place Description',
-              'open_now': 'Is the place open',
-              'opening_hours': 'Place Opening hours' ,
+              'id': 'place id given by the api'
+              'name': 'String, Place name',
+              'address': 'String, Place Address',
+              'rating': 'String, Place rating',
+              'description': 'String, a shrot polace description based on place type, and name',
+              'opening_hours': 'String, Place Opening hours' ,
+              'phone_numer': 'String, place phone number'
             }],
             'closing_message': 'any messsage to give contex to the user' 
           }

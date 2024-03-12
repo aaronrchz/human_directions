@@ -25,14 +25,14 @@ class _HumanDirectionsAppState extends State<HumanDirectionsApp>{
       currentScreen = DirectionsScreen(openAiApiKey: widget.openAiApiKey, googleDirectionsApiKey: widget.googleDirectionsApiKey);
     });
   }
-  void goToNearbyDirectionsScreen() async{
-    /*HumanDirections testController = HumanDirections(openAiApiKey: widget.openAiApiKey, googleDirectionsApiKey: widget.googleDirectionsApiKey);
-      await testController.getCurrentLocation(context);
-      print(testController.currentPosition);
-      await testController.gptPromptNearbyPlaces('Where can i get a drink', testController.currentPosition!); */
+  void goToNearbyDirectionsScreen() {
+    setState(() {
+      currentScreen = RequestDNearbyPlacesScreen(googleDirectionsApiKey: widget.googleDirectionsApiKey, openAiApiKey: widget.openAiApiKey);
+    });
+  }
+  void goToRecommendedPlaceScreen(){
     setState(() {
       
-      currentScreen = RequestDNearbyPlacesScreen(googleDirectionsApiKey: widget.googleDirectionsApiKey, openAiApiKey: widget.openAiApiKey);
     });
   }
   @override

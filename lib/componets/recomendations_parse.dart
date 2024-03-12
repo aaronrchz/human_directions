@@ -1,30 +1,36 @@
 import 'dart:convert';
 
 class Recommendation {
+  final String id;
   final String name;
   final String address;
   final String rating;
   final String description;
-  final String openNow;
+  //final String openNow;
   final String openingHours;
+  final String phoneNumber;
 
   Recommendation({
+    required this.id,
     required this.name,
     required this.address,
     required this.rating,
     required this.description,
-    required this.openNow,
+    //required this.openNow,
     required this.openingHours,
+    required this.phoneNumber,
   });
 
   factory Recommendation.fromJson(Map<String, dynamic> json) {
     return Recommendation(
+      id: json['id'],
       name: json['name'],
       address: json['address'],
       rating: json['rating'].toString(),
       description: json['description'],
-      openNow: json['open_now'].toString(),
-      openingHours: json['opening_hours']
+      //openNow: json['open_now'].toString(),
+      openingHours: json['opening_hours'],
+      phoneNumber: json['phone_number'],
     );
   }
 }

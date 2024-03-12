@@ -44,14 +44,17 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ask for places recomandations nearby')),
+      appBar: AppBar(title: const Text('Recomendacion de lugares cercanos')),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
         child: Column(
           children: [
-            const Text(
-                'Preguinta por recomendaciones e.j. ¿Donde puedo comer sushi por aqui?'),
-            TextField(controller: _textEditingController),
+            TextField(
+              controller: _textEditingController,
+              decoration: const InputDecoration(
+                labelText: 'Solicitud',
+              ),
+            ),
             ElevatedButton(
               onPressed: () {
                 setState(() {
@@ -84,18 +87,32 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                             child: ListView(
                               padding: const EdgeInsets.all(8),
                               children: [
-                                ...data.recommendations!.map((e) {
-                                  return ExpansionTile(
-                                    title: Text(e.name),
-                                    subtitle: Text(e.rating),
-                                    children: [
-                                      ListTile(
-                                        title: Text(e.description),
+                                ...data.recommendations!.map(
+                                  (e) {
+                                    return ExpansionTile(
+                                      title: Text(e.name),
+                                      subtitle: Column(
+                                        children: [
+                                          Text(e.description),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.star_rate_rounded),
+                                              Text(e.rating),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                      TextButton(onPressed: (){}, child: const Text('¡Quiero ir!'),),
-                                    ],
-                                  );
-                                }),
+                                      children: [
+                                        Text('Abierto: ${e.openingHours}'),
+                                        Text('Numero de telefono: ${e.phoneNumber}'),
+                                        TextButton(
+                                          onPressed: () {},
+                                          child: const Text('¡Quiero ir!'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
                               ],
                             ),
                           ),
