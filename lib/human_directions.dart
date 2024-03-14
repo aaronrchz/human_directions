@@ -41,7 +41,9 @@ class HumanDirections {
       this.unitSystem = UnitSystem.metric,
       this.travelMode = TravelMode.walking,
       this.openAIlenguage = OpenAILenguage.en,
-      this.placesRadious = 50.0}) : nearbyplacesController = PlacesController(placesApiKey: googleDirectionsApiKey);
+      this.placesRadious = 50.0})
+      : nearbyplacesController =
+            PlacesController(placesApiKey: googleDirectionsApiKey);
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => requestResult;
@@ -140,7 +142,8 @@ class HumanDirections {
     }
   }
 
-  Future<NearbyPlacesRecomendationsObject> gptPromptNearbyPlaces(String prompt, GeoCoord location) async {
+  Future<NearbyPlacesRecomendationsObject> gptPromptNearbyPlaces(
+      String prompt, GeoCoord location) async {
     try {
       OpenAI.apiKey = openAiApiKey;
       final systemMessage = OpenAIChatCompletionChoiceMessageModel(
@@ -205,7 +208,6 @@ class HumanDirections {
                 description:
                     'radius in meters around the user location where the places are going to be looked up to'),
           ],
-
         ),
       );
       final chat = await OpenAI.instance.chat.create(
@@ -224,9 +226,9 @@ class HumanDirections {
           final category = decodedArgs['category'];
           final radius = decodedArgs['radius'];
 
-          final result = await nearbyplacesController.simplifyFetchNearbyPlacess(
-              GeoCoord(latitude, longitude), radius,
-              type: category);
+          final result = await nearbyplacesController
+              .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,
+                  type: category);
           requestMessages.add(message);
           requestMessages.add(RequestFunctionMessage(
             role: OpenAIChatMessageRole.tool,
@@ -244,9 +246,33 @@ class HumanDirections {
       final secondResponseMessage =
           secondChat.choices[0].message.content?[0].text;
       if (secondResponseMessage != null) {
-        return NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
+        final output =
+            NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
+        final List<Map<String, dynamic>> photosRep = [];
+        for (var element in output.recommendations!) {
+          photosRep.add({
+            'id': element.id,
+            'uri_collection': null,
+          });
+        }
+        final List<List<dynamic>> photosId = [];
+        for (var element in output.recommendations!) {
+          photosId.add(
+              await nearbyplacesController.fetchPlacePhotosData(element.id));
+        }
+        int i = 0;
+        for (var element in photosId) {
+          photosRep[i]['uri_collection'] =
+              await nearbyplacesController.fetchPhotosUrl(element,
+                  width: 400, height: 400, maxOperations: 1);
+          i++;
+        }
+        output.recomendationPhotos =
+            PhotoCollection(placePhotoUriCollection: photosRep);
+        return output;
       } else {
-        return NearbyPlacesRecomendationsObject.fromError(Exception('LLM response is empty'));
+        return NearbyPlacesRecomendationsObject.fromError(
+            Exception('LLM response is empty'));
       }
     } catch (e) {
       return NearbyPlacesRecomendationsObject.fromError(e);

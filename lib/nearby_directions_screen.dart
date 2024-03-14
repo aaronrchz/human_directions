@@ -87,8 +87,10 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                             child: ListView(
                               padding: const EdgeInsets.all(8),
                               children: [
-                                ...data.recommendations!.map(
-                                  (e) {
+                                ...data.recommendations!.asMap().entries.map(
+                                  (entry) {
+                                    final index = entry.key;
+                                    final e = entry.value;
                                     return ExpansionTile(
                                       title: Text(e.name),
                                       subtitle: Column(
@@ -105,6 +107,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                                       children: [
                                         Text('Abierto: ${e.openingHours}'),
                                         Text('Numero de telefono: ${e.phoneNumber}'),
+                                        Image.network(data.recomendationPhotos!.placePhotoUriCollection[index]['uri_collection'][0]['photoUri']),
                                         TextButton(
                                           onPressed: () {},
                                           child: const Text('¡Quiero ir!'),

@@ -6,7 +6,6 @@ class Recommendation {
   final String address;
   final String rating;
   final String description;
-  //final String openNow;
   final String openingHours;
   final String phoneNumber;
 
@@ -16,7 +15,6 @@ class Recommendation {
     required this.address,
     required this.rating,
     required this.description,
-    //required this.openNow,
     required this.openingHours,
     required this.phoneNumber,
   });
@@ -35,8 +33,14 @@ class Recommendation {
   }
 }
 
+class PhotoCollection{
+  List<Map<String, dynamic>> placePhotoUriCollection;
+  PhotoCollection({required this.placePhotoUriCollection});
+}
+
 class NearbyPlacesRecomendationsObject {
   List<Recommendation>? recommendations;
+  PhotoCollection? recomendationPhotos;
   String? startMessage;
   String? closingMessage;
   bool hasError;

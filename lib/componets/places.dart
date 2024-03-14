@@ -38,7 +38,7 @@ class PlacesController {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
         'X-Goog-FieldMask':
-            'places.Id,places.displayName,places.businessStatus,places.formattedAddress,places.name,places.types,places.rating,places.nationalPhoneNumber,places.regularOpeningHours,places.photos',
+            'places.id,places.displayName,places.businessStatus,places.formattedAddress,places.name,places.types,places.rating,places.nationalPhoneNumber,places.regularOpeningHours,places.photos',
       },
       body: requestBody,
     );
@@ -52,6 +52,7 @@ class PlacesController {
       }
       return data['places'];
     } else {
+      print('Failed to load nearby places: ${response.statusCode}: ${response.body}');
       throw Exception(
           'Failed to load nearby places: ${response.statusCode}: ${response.body}');
     }
@@ -65,7 +66,7 @@ class PlacesController {
       List<dynamic> result = [];
       for (var element in data) {
         result.add({
-          'placeId': element['placeId'],
+          'placeId': element['id'],
           'name': element['displayName']['text'],
           'open_now': element['regularOpeningHours']['openNow'],
           'opening_hours': element['regularOpeningHours']
@@ -124,9 +125,9 @@ class PlacesController {
     Map<String, String> headers = {
       'ContentType': 'application/json',
       'X-Goog-Api-Key': placesApiKey,
-      'X-Goog-FieldMask': 'places.photos'
+      'X-Goog-FieldMask': 'photos'
     };
-    final response = await http.post(Uri.parse(uri), headers: headers);
+    final response = await http.get(Uri.parse(uri), headers: headers);
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       responseBody = response.body;
@@ -136,6 +137,7 @@ class PlacesController {
       }
       return data['photos'];
     } else {
+      print(responseBody);
       throw Exception(
           'Failed to fetch places photos: ${response.statusCode}: ${response.body}');
     }
@@ -143,6 +145,7 @@ class PlacesController {
 
   Future<List<dynamic>> fetchPhotosUrl(List<dynamic> photos,
       {int? width, int? height, int? maxOperations}) async {
+    List<dynamic> output = [];
     int opCase = 0;
     if (maxOperations != null) {
       if (maxOperations > photos.length) {
@@ -157,24 +160,46 @@ class PlacesController {
     switch (opCase) {
       case 0:
         for (var photo in photos) {
-          String uri = 'https://places.googleapis.com/v1/${photo['name']}';
-          String key = '&key=$placesApiKey';
+          String uri =
+              'https://places.googleapis.com/v1/${photo['name']}/media??maxHeightPx=$width&maxWidthPx=$height&key=$placesApiKey';
+          final result = await http.get(Uri.parse(uri));
+          if (result.statusCode == 200) {
+            final Map<String, dynamic> data = json.decode(result.body);
+            responseBody = result.body;
+            responseHeaders = result.headers;
+            if (data.isEmpty) {
+              throw Exception(
+                  'Failed to fetch photo: ${result.statusCode}: body is empty');
+            }
+            output.add(data);
+          } else {
+            throw Exception(
+                'Failed to fetch photo: ${result.statusCode}: ${result.body}');
+          }
         }
-        break;
+        return output;
       case 1:
-        break;
+        for (var i = 0; i < maxOperations!; i ++) {
+          String uri =
+              'https://places.googleapis.com/v1/${photos[i]['name']}/media?maxHeightPx=$width&maxWidthPx=$height&skipHttpRedirect=true&key=$placesApiKey';
+          final result = await http.get(Uri.parse(uri));
+          if (result.statusCode == 200) {
+            final Map<String, dynamic> data = json.decode(result.body);
+            responseBody = result.body;
+            responseHeaders = result.headers;
+            if (data.isEmpty) {
+              throw Exception(
+                  'Failed to fetch photo: ${result.statusCode}: body is empty');
+            }
+            output.add(data);
+          } else {
+            throw Exception(
+                'Failed to fetch photo: ${result.statusCode}: ${result.body}');
+          }
+        }
+        return output;
       default:
-        break;
+      throw Exception('Wrong operation');
     }
-    return [];
-  }
-}
-
-class PlacePhotosDimentios {
-  final int width;
-  final int height;
-  PlacePhotosDimentios({required this.width, required this.height});
-  factory PlacePhotosDimentios.fromMap(Map<String, dynamic> map) {
-    return PlacePhotosDimentios(width: map['width'], height: map['height']);
   }
 }
