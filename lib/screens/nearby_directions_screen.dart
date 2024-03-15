@@ -8,9 +8,13 @@ class RequestDNearbyPlacesScreen extends StatefulWidget {
   const RequestDNearbyPlacesScreen(
       {required this.googleDirectionsApiKey,
       required this.openAiApiKey,
+      required this.func,
+      required this.onBack,
       super.key});
   final String openAiApiKey;
   final String googleDirectionsApiKey;
+  final void Function(String, String) func;
+  final void Function() onBack;
   @override
   State<RequestDNearbyPlacesScreen> createState() =>
       _RequestDNearbyPlacesScreen();
@@ -43,7 +47,10 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Recomendacion de lugares cercanos')),
+      appBar: AppBar(title: const Text('Recomendacion de lugares cercanos'), leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: widget.onBack,
+        ),),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
         child: Column(
@@ -108,7 +115,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                                         Text('Numero de telefono: ${e.phoneNumber}'),
                                         Image.network(data.recomendationPhotos!.placePhotoUriCollection[index]['uri_collection'][0]['photoUri']),
                                         TextButton(
-                                          onPressed: () {},
+                                          onPressed: (){widget.func(('${directionsController.currentPosition!.latitude}, ${directionsController.currentPosition!.longitude}'), e.address);},
                                           child: const Text('¡Quiero ir!'),
                                         ),
                                       ],
