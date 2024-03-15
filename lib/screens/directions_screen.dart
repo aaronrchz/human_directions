@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/componets/supported_lenguages.dart';
+import 'package:human_directios/componets/llm/supported_lenguages.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 
-import 'package:human_directios/widgets/google_directios_steps_widget.dart';
-import 'package:human_directios/widgets/human_directios_widget.dart';
-import 'package:human_directios/widgets/request_status_widgets.dart';
+import 'package:human_directios/screens/widgets/google_directios_steps_widget.dart';
+import 'package:human_directios/screens/widgets/human_directios_widget.dart';
+import 'package:human_directios/screens/widgets/request_status_widgets.dart';
 
 class DirectionsScreen extends StatefulWidget {
   const DirectionsScreen(

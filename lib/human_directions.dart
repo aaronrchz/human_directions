@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart' hide Step;
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
-import 'package:human_directios/componets/places.dart';
-import 'package:human_directios/componets/places_types.dart';
-import 'package:human_directios/componets/supported_lenguages.dart';
+import 'package:human_directios/componets/llm/system_messages.dart';
+import 'package:human_directios/componets/llm/tools/tools.dart';
+import 'package:human_directios/componets/places/places.dart';
+import 'package:human_directios/componets/llm/supported_lenguages.dart';
 import 'package:human_directios/componets/location.dart';
-import 'package:human_directios/componets/recomendations_parse.dart';
+import 'package:human_directios/componets/llm/recomendations_parse.dart';
 
 class HumanDirections {
   /* flags */
@@ -20,6 +21,7 @@ class HumanDirections {
   String requestResult = 'awaiting';
   String? humanDirectionsResult = '';
   PlacesController nearbyplacesController;
+  HumanDirectionsLLMSystenMessages systenMessages;
   List<String> nearbyPlacesFrom = [];
   List<String> nearbyPlacesTo = [];
   GeoCoord? currentPosition;
@@ -43,7 +45,9 @@ class HumanDirections {
       this.openAIlenguage = OpenAILenguage.en,
       this.placesRadious = 50.0})
       : nearbyplacesController =
-            PlacesController(placesApiKey: googleDirectionsApiKey);
+            PlacesController(placesApiKey: googleDirectionsApiKey),
+        systenMessages =
+            HumanDirectionsLLMSystenMessages(openAIlenguage: openAIlenguage);
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => requestResult;
@@ -68,6 +72,12 @@ class HumanDirections {
 
   Future<void> getCurrentLocation(BuildContext context) async {
     currentPosition = await GeoLocatorHandler().getLocation(context);
+  }
+
+  Future<NearbyPlacesRecomendationsObject> getNearbyRecommendations(
+      String prompt, BuildContext context) async {
+    await getCurrentLocation(context);
+    return await _gptPromptNearbyPlaces(prompt, currentPosition!);
   }
 
   int _fetchDirections(String origin, String destination) {
@@ -99,21 +109,7 @@ class HumanDirections {
 
   Future<void> _gptPrompt(String prompt) async {
     OpenAI.apiKey = openAiApiKey;
-    final systemMessage = OpenAIChatCompletionChoiceMessageModel(
-      content: [
-        OpenAIChatCompletionChoiceMessageContentItemModel.text(
-          """
-          Convert this instruction set to a more human-friendly format. 
-          Specify when mentioning a street, avenue, etc.
-          Be extra friendly.
-          Always use the given nearby places to better guide the user.
-          If there is not an instruction set, just say 'Ooops! it seems there are not valid instructions.'
-          Answer the user in $openAIlenguage. 
-          """,
-        ),
-      ],
-      role: OpenAIChatMessageRole.assistant,
-    );
+    final systemMessage = systenMessages.humanDirectionsSysMsg;
 
     // the user message that will be sent to the request.
     final userMessage = OpenAIChatCompletionChoiceMessageModel(
@@ -142,39 +138,11 @@ class HumanDirections {
     }
   }
 
-  Future<NearbyPlacesRecomendationsObject> gptPromptNearbyPlaces(
+  Future<NearbyPlacesRecomendationsObject> _gptPromptNearbyPlaces(
       String prompt, GeoCoord location) async {
     try {
       OpenAI.apiKey = openAiApiKey;
-      final systemMessage = OpenAIChatCompletionChoiceMessageModel(
-        content: [
-          OpenAIChatCompletionChoiceMessageContentItemModel.text(
-            """
-          The user will give thier location and ask for recommendations about were to go
-          in the following text, please extract and deliver one of the following categories:
-          getegories: $placesTypesList
-          however if the place is not open at the moment do not recommend it or mark it as closed.
-          Avoid using Links.
-          The output mus be a map with the following format and none filed must be null:
-          {
-            'start_message': 'any messsage to give contex to the user',
-            'recommendations' : [{
-              'id': 'place id given by the api'
-              'name': 'String, Place name',
-              'address': 'String, Place Address',
-              'rating': 'String, Place rating',
-              'description': 'String, a shrot polace description based on place type, and name',
-              'opening_hours': 'String, Place Opening hours' ,
-              'phone_numer': 'String, place phone number'
-            }],
-            'closing_message': 'any messsage to give contex to the user' 
-          }
-          answer the user in: $openAIlenguage.
-          """,
-          ),
-        ],
-        role: OpenAIChatMessageRole.assistant,
-      );
+      final systemMessage = systenMessages.recommendationsSysMsg;
 
       final userMessage = OpenAIChatCompletionChoiceMessageModel(
         content: [
@@ -187,29 +155,7 @@ class HumanDirections {
 
       final requestMessages = [systemMessage, userMessage];
 
-      final tools = OpenAIToolModel(
-        type: 'function',
-        function: OpenAIFunctionModel.withParameters(
-          name: 'fetchNearbyPlaces',
-          description: 'obtain nearby places, all parameters are required',
-          parameters: [
-            OpenAIFunctionProperty.number(
-                name: 'latitude',
-                description: 'the user location latitude value'),
-            OpenAIFunctionProperty.number(
-                name: 'longitude',
-                description: 'the user location longitude value'),
-            OpenAIFunctionProperty.string(
-                name: 'category',
-                description: 'Place category, e.g. bar, library',
-                enumValues: placesTypesList),
-            OpenAIFunctionProperty.number(
-                name: 'radius',
-                description:
-                    'radius in meters around the user location where the places are going to be looked up to'),
-          ],
-        ),
-      );
+      final tools = HumanDirectionsLLMTools.recommendationTool;
       final chat = await OpenAI.instance.chat.create(
         model: "gpt-4",
         messages: requestMessages,
@@ -218,13 +164,14 @@ class HumanDirections {
       final message = chat.choices.first.message;
       if (message.haveToolCalls) {
         final call = message.toolCalls!.first;
-        if (call.function.name == 'fetchNearbyPlaces') {
+        if (call.function.name ==
+            HumanDirectionsLLMTools.recommendationTool.function.name) {
           final decodedArgs = jsonDecode(call.function.arguments);
 
-          final latitude = decodedArgs['latitude'];
-          final longitude = decodedArgs['longitude'];
-          final category = decodedArgs['category'];
-          final radius = decodedArgs['radius'];
+          final latitude = decodedArgs[RecommendationToolArgs.latitude.name];
+          final longitude = decodedArgs[RecommendationToolArgs.longitude.name];
+          final category = decodedArgs[RecommendationToolArgs.category.name];
+          final radius = decodedArgs[RecommendationToolArgs.radius.name];
 
           final result = await nearbyplacesController
               .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,

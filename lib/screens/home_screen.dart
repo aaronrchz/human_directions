@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/widgets/custom_bg.dart';
+import 'package:human_directios/screens/widgets/custom_bg.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen(

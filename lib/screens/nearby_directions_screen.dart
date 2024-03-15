@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_directions_api/google_directions_api.dart';
-import 'package:human_directios/componets/recomendations_parse.dart';
-import 'package:human_directios/componets/supported_lenguages.dart';
+import 'package:human_directios/componets/llm/recomendations_parse.dart';
+import 'package:human_directios/componets/llm/supported_lenguages.dart';
 import 'package:human_directios/human_directions.dart';
 
 class RequestDNearbyPlacesScreen extends StatefulWidget {
@@ -30,9 +30,8 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
         unitSystem: UnitSystem.metric,
         openAIlenguage: OpenAILenguage.es);
     String input = _textEditingController.text;
-    await directionsController.getCurrentLocation(context);
-    return await directionsController.gptPromptNearbyPlaces(
-        input, directionsController.currentPosition!);
+    return await directionsController.getNearbyRecommendations(
+        input, context);
   }
 
   @override

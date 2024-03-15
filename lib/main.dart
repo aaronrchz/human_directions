@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:human_directios/directions_screen.dart';
-import 'package:human_directios/home_screen.dart';
-import 'package:human_directios/nearby_directions_screen.dart';
+import 'package:human_directios/screens/directions_screen.dart';
+import 'package:human_directios/screens/home_screen.dart';
+import 'package:human_directios/screens/nearby_directions_screen.dart';
 
 void main() async {
   await dotenv.load(fileName: 'assets/.env');
