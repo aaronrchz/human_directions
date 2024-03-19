@@ -28,7 +28,7 @@ class HumanDirectionsLLMSystenMessages {
           getegories: $placesTypesList
           however if the place is not open at the moment do not recommend it or mark it as closed.
           Avoid using Links.
-          The output mus be a map with the following format and none filed must be null:
+          The output mus be a map with the following format and none filed must be null, if any field is missing put the string "missing" instead:
           {
             'start_message': 'any messsage to give contex to the user',
             'recommendations' : [{
@@ -42,6 +42,7 @@ class HumanDirectionsLLMSystenMessages {
             }],
             'closing_message': 'any messsage to give contex to the user' 
           }
+          None part of the response must be outside of the map
           answer the user in: $openAIlenguage.
           """,
           ),

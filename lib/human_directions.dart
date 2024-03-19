@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart' hide Step;
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
+import 'package:human_directios/componets/llm/models.dart';
 import 'package:human_directios/componets/llm/system_messages.dart';
 import 'package:human_directios/componets/llm/tools/tools.dart';
 import 'package:human_directios/componets/places/places.dart';
@@ -34,6 +35,7 @@ class HumanDirections {
   UnitSystem unitSystem;
   TravelMode travelMode;
   double placesRadious;
+  String gptModel;
 
   HumanDirections(
       {required this.openAiApiKey,
@@ -43,7 +45,8 @@ class HumanDirections {
       this.unitSystem = UnitSystem.metric,
       this.travelMode = TravelMode.walking,
       this.openAIlenguage = OpenAILenguage.en,
-      this.placesRadious = 50.0})
+      this.placesRadious = 50.0,
+      this.gptModel = OpenAiModelsNames.gpt4})
       : nearbyplacesController =
             PlacesController(placesApiKey: googleDirectionsApiKey),
         systenMessages =
@@ -77,7 +80,8 @@ class HumanDirections {
   Future<NearbyPlacesRecomendationsObject> getNearbyRecommendations(
       String prompt, BuildContext context) async {
     await getCurrentLocation(context);
-    return await _gptPromptNearbyPlaces(prompt, currentPosition!);
+    return await _gptPromptNearbyPlaces(prompt, currentPosition!)
+        .timeout(const Duration(minutes: 2));
   }
 
   int _fetchDirections(String origin, String destination) {
@@ -126,7 +130,7 @@ class HumanDirections {
     ];
     try {
       final chat = await OpenAI.instance.chat.create(
-        model: "gpt-4",
+        model: gptModel,
         messages: requestMessages,
       );
       humanDirectionsResult = chat.choices[0].message.content?[0].text;
@@ -157,10 +161,10 @@ class HumanDirections {
 
       final tools = HumanDirectionsLLMTools.recommendationTool;
       final chat = await OpenAI.instance.chat.create(
-        model: "gpt-4",
+        model: gptModel,
         messages: requestMessages,
         tools: [tools],
-      );
+      ).timeout(const Duration(seconds: 40));
       final message = chat.choices.first.message;
       if (message.haveToolCalls) {
         final call = message.toolCalls!.first;
@@ -175,7 +179,8 @@ class HumanDirections {
 
           final result = await nearbyplacesController
               .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,
-                  type: category);
+                  type: category)
+              .timeout(const Duration(seconds: 40));
           requestMessages.add(message);
           requestMessages.add(RequestFunctionMessage(
             role: OpenAIChatMessageRole.tool,
@@ -187,12 +192,23 @@ class HumanDirections {
           ));
         }
       }
-      final secondChat = await OpenAI.instance.chat
-          .create(model: "gpt-4", messages: requestMessages, tools: [tools]);
+      //final secondChat = await _fetchChat(requestMessages, tools).timeout(const Duration(seconds: 40));
+      /*final secondResponseMessage =
+          secondChat.choices[0].message.content?[0].text;*/
+      final secondChat = OpenAI.instance.chat.createStream(
+          model: gptModel, messages: requestMessages, tools: [tools]);
 
-      final secondResponseMessage =
-          secondChat.choices[0].message.content?[0].text;
-      if (secondResponseMessage != null) {
+      final List<OpenAIStreamChatCompletionModel> completions =
+          await secondChat.toList().timeout(const Duration( minutes: 1));
+
+      String secondResponseMessage = '';
+
+      for (var streamChatCompletion in completions) {
+        final content = streamChatCompletion.choices.first.delta.content;
+        secondResponseMessage += (content?[0]?.text ?? '');
+        print(content);
+      }
+      if (secondResponseMessage.length > 10) {
         final output =
             NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
         final List<Map<String, dynamic>> photosRep = [];
@@ -204,14 +220,16 @@ class HumanDirections {
         }
         final List<List<dynamic>> photosId = [];
         for (var element in output.recommendations!) {
-          photosId.add(
-              await nearbyplacesController.fetchPlacePhotosData(element.id));
+          photosId.add(await nearbyplacesController
+              .fetchPlacePhotosData(element.id)
+              .timeout(const Duration(seconds: 40)));
         }
         int i = 0;
         for (var element in photosId) {
-          photosRep[i]['uri_collection'] =
-              await nearbyplacesController.fetchPhotosUrl(element,
-                  width: 400, height: 400, maxOperations: 1);
+          photosRep[i]['uri_collection'] = await nearbyplacesController
+              .fetchPhotosUrl(element,
+                  width: 400, height: 400, maxOperations: 1)
+              .timeout(const Duration(seconds: 40));
           i++;
         }
         output.recomendationPhotos =
