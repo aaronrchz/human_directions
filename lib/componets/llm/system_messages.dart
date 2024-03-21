@@ -19,12 +19,12 @@ class HumanDirectionsLLMSystenMessages {
           """),
           ],
         ),
-        recommendationsSysMsg =  OpenAIChatCompletionChoiceMessageModel(
-        content: [
-          OpenAIChatCompletionChoiceMessageContentItemModel.text(
-            """
+        recommendationsSysMsg = OpenAIChatCompletionChoiceMessageModel(
+          content: [
+            OpenAIChatCompletionChoiceMessageContentItemModel.text(
+              """
           The user will give thier location and ask for recommendations about were to go
-          in the following text, please extract and deliver one of the following categories:
+          in the following text, please extract and deliver a list of the following categories:
           getegories: $placesTypesList
           however if the place is not open at the moment do not recommend it or mark it as closed.
           Avoid using Links.
@@ -45,8 +45,8 @@ class HumanDirectionsLLMSystenMessages {
           None part of the response must be outside of the map
           answer the user in: $openAIlenguage.
           """,
-          ),
-        ],
-        role: OpenAIChatMessageRole.assistant,
-      );
+            ),
+          ],
+          role: OpenAIChatMessageRole.assistant,
+        );
 }

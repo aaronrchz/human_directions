@@ -9,11 +9,12 @@ class PlacesController {
   String responseBody = '';
   Map<String, String>? responseHeaders;
   String placesApiKey;
+  static const List<String> defaultTypes = [PlaceType.any];
 
   PlacesController({required this.placesApiKey});
 
   Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, num radius,
-      {String type = PlaceType.any}) async {
+      {List<String> types = defaultTypes}) async {
     String apiKey = placesApiKey;
     const uri = 'https://places.googleapis.com/v1/places:searchNearby';
     final requestBodyPrototype = {
@@ -28,8 +29,8 @@ class PlacesController {
         }
       }
     };
-    if (type != PlaceType.any) {
-      requestBodyPrototype['includedTypes'] = [type];
+    if (types.contains(PlaceType.any)) {
+      requestBodyPrototype['includedTypes'] = types;
     }
     final requestBody = jsonEncode(requestBodyPrototype);
     final response = await http.post(
@@ -38,7 +39,7 @@ class PlacesController {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
         'X-Goog-FieldMask':
-            'places.id,places.displayName,places.businessStatus,places.formattedAddress,places.name,places.types,places.rating,places.nationalPhoneNumber,places.regularOpeningHours,places.photos',
+            'places.id,places.displayName,places.businessStatus,places.formattedAddress,places.name,places.types,places.rating,places.nationalPhoneNumber,places.regularOpeningHours',
       },
       body: requestBody,
     );
@@ -52,7 +53,8 @@ class PlacesController {
       }
       return data['places'];
     } else {
-      print('Failed to load nearby places: ${response.statusCode}: ${response.body}');
+      print(
+          'Failed to load nearby places: ${response.statusCode}: ${response.body}');
       throw Exception(
           'Failed to load nearby places: ${response.statusCode}: ${response.body}');
     }
@@ -60,21 +62,28 @@ class PlacesController {
 
   Future<List<dynamic>> simplifyFetchNearbyPlacess(
       GeoCoord centerCoord, num radius,
-      {String type = PlaceType.any}) async {
+      {List<String> types = defaultTypes}) async {
     try {
-      final data = await fetchNearbyPlaces(centerCoord, radius, type: type);
+      final data = await fetchNearbyPlaces(centerCoord, radius, types: types);
       List<dynamic> result = [];
       for (var element in data) {
         result.add({
           'placeId': element['id'],
-          'name': element['displayName']['text'],
-          'open_now': element['regularOpeningHours']['openNow'],
-          'opening_hours': element['regularOpeningHours']
-              ['weekdayDescriptions'],
-          'rating': element['rating'],
-          'business_status': element['businessStatus'],
+          'name': element['displayName'] != null
+              ? element['displayName']['text']
+              : 'unspecified',
+          'open_now': (element['regularOpeningHours'] != null &&
+                  element['regularOpeningHours']['openNow'] != null)
+              ? element['regularOpeningHours']['openNow']
+              : 'unspecified',
+          'opening_hours': (element['regularOpeningHours'] != null &&
+                  element['regularOpeningHours']['weekdayDescriptions'] != null)
+              ? element['regularOpeningHours']['weekdayDescriptions']
+              : 'unspecified',
+          'rating': element['rating'] ?? 'unspecified',
+          'business_status': element['businessStatus'] ?? 'unspecified',
           'address': element['formattedAddress'],
-          'phone_number': element['nationalPhoneNumber'],
+          'phone_number': element['nationalPhoneNumber'] ?? 'unspecified',
         });
       }
       return result;
@@ -102,7 +111,7 @@ class PlacesController {
 
   Future<String> fetchAndSummarizeNearbyPlaces(
       GeoCoord? centerCoord, double radius,
-      {String type = PlaceType.any}) async {
+      {List<String> types = defaultTypes}) async {
     try {
       GeoCoord queryCoord;
       if (centerCoord != null) {
@@ -111,7 +120,7 @@ class PlacesController {
         return 'Error invalid geoCoord';
       }
       final List<dynamic> nearbyPlaces =
-          await fetchNearbyPlaces(queryCoord, radius, type: type);
+          await fetchNearbyPlaces(queryCoord, radius, types: types);
       final String summary = summaryNerbyPlaces(nearbyPlaces);
       return summary;
     } catch (e) {
@@ -179,7 +188,7 @@ class PlacesController {
         }
         return output;
       case 1:
-        for (var i = 0; i < maxOperations!; i ++) {
+        for (var i = 0; i < maxOperations!; i++) {
           String uri =
               'https://places.googleapis.com/v1/${photos[i]['name']}/media?maxHeightPx=$width&maxWidthPx=$height&skipHttpRedirect=true&key=$placesApiKey';
           final result = await http.get(Uri.parse(uri));
@@ -199,7 +208,7 @@ class PlacesController {
         }
         return output;
       default:
-      throw Exception('Wrong operation');
+        throw Exception('Wrong operation');
     }
   }
 }

@@ -33,7 +33,7 @@ class Recommendation {
   }
 }
 
-class PhotoCollection{
+class PhotoCollection {
   List<Map<String, dynamic>> placePhotoUriCollection;
   PhotoCollection({required this.placePhotoUriCollection});
 }
@@ -44,36 +44,35 @@ class NearbyPlacesRecomendationsObject {
   String? startMessage;
   String? closingMessage;
   bool hasError;
-  String? errorMessage; 
+  String? errorMessage;
 
-  NearbyPlacesRecomendationsObject(
-      {required this.startMessage,
-      required this.recommendations,
-      required this.closingMessage,
-      required this.errorMessage,
-      required this.hasError,
-      });
+  NearbyPlacesRecomendationsObject({
+    required this.startMessage,
+    required this.recommendations,
+    required this.closingMessage,
+    required this.errorMessage,
+    required this.hasError,
+  });
   factory NearbyPlacesRecomendationsObject.fromString(String rawData) {
     Map<String, dynamic> data = jsonDecode(rawData);
 
     return NearbyPlacesRecomendationsObject(
-        startMessage: data['start_message'],
-        recommendations: (data['recommendations'] as List)
-            .map((item) => Recommendation.fromJson(item))
-            .toList(),
-        closingMessage: data['closing_message'],
-        errorMessage: null,
-        hasError: false,
-        );
+      startMessage: data['start_message'],
+      recommendations: (data['recommendations'] as List)
+          .map((item) => Recommendation.fromJson(item))
+          .toList(),
+      closingMessage: data['closing_message'],
+      errorMessage: null,
+      hasError: false,
+    );
   }
-  factory NearbyPlacesRecomendationsObject.fromError(Object e){
+  factory NearbyPlacesRecomendationsObject.fromError(Object e) {
     return NearbyPlacesRecomendationsObject(
       startMessage: null,
       recommendations: null,
       closingMessage: null,
-      errorMessage:  e.toString(),
+      errorMessage: e.toString(),
       hasError: true,
     );
   }
-
 }

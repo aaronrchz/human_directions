@@ -7,7 +7,7 @@ class ToolBuilder {
   ToolBuilder({required this.components});
 
   OpenAIToolModel buildTool() {
-    final List<OpenAIFunctionProperty>functionParameters = [];
+    final List<OpenAIFunctionProperty> functionParameters = [];
     for (var arg in components.args) {
       switch (arg.type) {
         case Argtype.string:
@@ -42,10 +42,19 @@ class ToolBuilder {
               description: arg.description,
               isRequired: arg.isRequired));
           break;
-        /*case Argtype.array:
-          /* uninplemented for the moment*/
+        case Argtype.array:
+          //for the moment only supports items of the type string
+          functionParameters.add(
+            OpenAIFunctionProperty.array(
+              name: arg.name,
+              description: arg.description,
+              isRequired: arg.isRequired,
+              items: OpenAIFunctionProperty.string(
+                  name: 'item', description: 'Array item', isRequired: true),
+            ),
+          );
           break;
-        case Argtype.object:
+        /*case Argtype.object:
         /* uninplemented for the moment*/
         case Argtype.primitive:
           /* uninplemented for the moment*/

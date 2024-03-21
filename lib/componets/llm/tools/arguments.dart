@@ -6,23 +6,21 @@ class ToolHeader {
       {required this.type, required this.name, required this.description});
 }
 
-enum Argtype{
+enum Argtype {
   string,
   integer,
-  //array, //not implemented for the moment
+  array, //not implemented for the moment
   //object,//not implemented for the moment
   //primitive,//not implemented for the moment
   boolean,
   number,
 }
 
-enum ToolTypeEnum{
+enum ToolTypeEnum {
   funciton,
 }
 
-Map<ToolTypeEnum, String>toolType = {
-  ToolTypeEnum.funciton : 'funcion'
-};
+Map<ToolTypeEnum, String> toolType = {ToolTypeEnum.funciton: 'funcion'};
 
 class ToolArg {
   final String name;

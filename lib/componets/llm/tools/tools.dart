@@ -25,10 +25,10 @@ class RecommendationToolArgs {
       description: 'the user location longitude value',
       type: Argtype.number,
       isRequired: true);
-  static ToolArg category = ToolArg(
+  static ToolArg categories = ToolArg(
       name: 'category',
-      description: 'Place category, e.g. bar, library',
-      type: Argtype.string,
+      description: 'List of place category, e.g. bar, library',
+      type: Argtype.array,
       isRequired: true,
       enumValues: placesTypesList);
   static ToolArg radius = ToolArg(
@@ -42,7 +42,7 @@ class RecommendationToolArgs {
 List<ToolArg> _recommendationToolArgsList = [
   RecommendationToolArgs.latitude,
   RecommendationToolArgs.longitude,
-  RecommendationToolArgs.category,
+  RecommendationToolArgs.categories,
   RecommendationToolArgs.radius
 ];
 

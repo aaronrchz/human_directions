@@ -36,6 +36,7 @@ class HumanDirections {
   TravelMode travelMode;
   double placesRadious;
   String gptModel;
+  double gptModelTemperature;
 
   HumanDirections(
       {required this.openAiApiKey,
@@ -46,7 +47,8 @@ class HumanDirections {
       this.travelMode = TravelMode.walking,
       this.openAIlenguage = OpenAILenguage.en,
       this.placesRadious = 50.0,
-      this.gptModel = OpenAiModelsNames.gpt4})
+      this.gptModel = OpenAiModelsNames.gpt4,
+      this.gptModelTemperature = 0.4})
       : nearbyplacesController =
             PlacesController(placesApiKey: googleDirectionsApiKey),
         systenMessages =
@@ -132,6 +134,7 @@ class HumanDirections {
       final chat = await OpenAI.instance.chat.create(
         model: gptModel,
         messages: requestMessages,
+        temperature: gptModelTemperature,
       );
       humanDirectionsResult = chat.choices[0].message.content?[0].text;
 
@@ -163,6 +166,7 @@ class HumanDirections {
       final chat = await OpenAI.instance.chat.create(
         model: gptModel,
         messages: requestMessages,
+        temperature: gptModelTemperature,
         tools: [tools],
       ).timeout(const Duration(seconds: 40));
       final message = chat.choices.first.message;
@@ -174,12 +178,13 @@ class HumanDirections {
 
           final latitude = decodedArgs[RecommendationToolArgs.latitude.name];
           final longitude = decodedArgs[RecommendationToolArgs.longitude.name];
-          final category = decodedArgs[RecommendationToolArgs.category.name];
+          final categories = List<String>.from(
+              decodedArgs[RecommendationToolArgs.categories.name]);
           final radius = decodedArgs[RecommendationToolArgs.radius.name];
 
           final result = await nearbyplacesController
               .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,
-                  type: category)
+                  types: categories)
               .timeout(const Duration(seconds: 40));
           requestMessages.add(message);
           requestMessages.add(RequestFunctionMessage(
@@ -196,10 +201,14 @@ class HumanDirections {
       /*final secondResponseMessage =
           secondChat.choices[0].message.content?[0].text;*/
       final secondChat = OpenAI.instance.chat.createStream(
-          model: gptModel, messages: requestMessages, tools: [tools]);
+        model: gptModel,
+        messages: requestMessages,
+        tools: [tools],
+        temperature: gptModelTemperature,
+      );
 
       final List<OpenAIStreamChatCompletionModel> completions =
-          await secondChat.toList().timeout(const Duration( minutes: 1));
+          await secondChat.toList().timeout(const Duration(minutes: 1));
 
       String secondResponseMessage = '';
 
