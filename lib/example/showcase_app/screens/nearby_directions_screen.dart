@@ -32,7 +32,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
         googleDirectionsApiKey: widget.googleDirectionsApiKey,
         travelMode: TravelMode.walking,
         unitSystem: UnitSystem.metric,
-        openAIlanguage: OpenAILanguage.es);
+        openAIlanguage: OpenAILanguage.en);
     String input = _textEditingController.text;
     return await directionsController
         .getNearbyRecommendations(input, context)

@@ -3,30 +3,24 @@ import 'package:human_directios/components/llm/supported_languages.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 
-import 'package:human_directios/screens/widgets/google_directios_steps_widget.dart';
-import 'package:human_directios/screens/widgets/human_directios_widget.dart';
-import 'package:human_directios/screens/widgets/request_status_widgets.dart';
+import 'package:human_directios/example/showcase_app/screens/widgets/google_directios_steps_widget.dart';
+import 'package:human_directios/example/showcase_app/screens/widgets/human_directios_widget.dart';
+import 'package:human_directios/example/showcase_app/screens/widgets/request_status_widgets.dart';
 
-class SimplifiedDirectionsScreen extends StatefulWidget {
-  const SimplifiedDirectionsScreen(
+class DirectionsScreen extends StatefulWidget {
+  const DirectionsScreen(
       {required this.openAiApiKey,
       required this.googleDirectionsApiKey,
-      required this.origin,
-      required this.destination,
       required this.onBack,
       super.key});
   final String openAiApiKey;
   final String googleDirectionsApiKey;
-  final String origin;
-  final String destination;
   final Function() onBack;
   @override
-  State<SimplifiedDirectionsScreen> createState() =>
-      _SimplifiedDirectionsScreenState();
+  State<DirectionsScreen> createState() => _DirectionsScreenState();
 }
 
-class _SimplifiedDirectionsScreenState
-    extends State<SimplifiedDirectionsScreen> {
+class _DirectionsScreenState extends State<DirectionsScreen> {
   String origin = '';
   String destination = '';
   String requestResult = '';
@@ -34,12 +28,14 @@ class _SimplifiedDirectionsScreenState
   Time resolvedTime = Time();
   bool useGeoLocation = false;
   bool enableDirectionsButton = true;
-  late Timer _timer;
 
   late HumanDirections directions;
 
   Widget googleDirectionsStepsWidget = const WaitingForUserInput();
   Widget humanDirectionsWidget = const WaitingForUserInput();
+  final TextEditingController _originFieldController = TextEditingController();
+  final TextEditingController _destinationFieldController =
+      TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -50,13 +46,9 @@ class _SimplifiedDirectionsScreenState
       googlelanguage: 'en',
       placesRadious: 50,
     );
-    _getUserFieldsAndFetchHumanDirections();
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel(); // Detiene el temporizador cuando la pantalla se destruye
-    super.dispose();
+    _originFieldController.text = '34 Bd Garibaldi, 75015 Paris, Francia';
+    _destinationFieldController.text =
+        'Champ de Mars, 5 Av. Anatole France, 75007 Paris, Francia';
   }
 
   void _fetchDirections() async {
@@ -74,7 +66,7 @@ class _SimplifiedDirectionsScreenState
               'Awaiting openAI directions Results\nPlease Hold on...');
     });
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (directions.fetchResultFlag == 0) {
           requestResult = directions.requestResult;
@@ -112,8 +104,8 @@ class _SimplifiedDirectionsScreenState
   }
 
   void _getUserFieldsAndFetchHumanDirections() {
-    String tempOrigin = widget.origin;
-    String tempDestination = widget.destination;
+    String tempOrigin = _originFieldController.text;
+    String tempDestination = _destinationFieldController.text;
     if (tempOrigin.isNotEmpty && tempDestination.isNotEmpty) {
       origin = tempOrigin;
       destination = tempDestination;
@@ -121,8 +113,8 @@ class _SimplifiedDirectionsScreenState
     } else {
       setState(() {
         googleDirectionsStepsWidget =
-            const ErrorOnRequestWidget('Invalid input');
-        humanDirectionsWidget = const ErrorOnRequestWidget('Invalid input');
+            const ErrorOnRequestWidget('invalid input');
+        humanDirectionsWidget = const ErrorOnRequestWidget('invalid input');
       });
     }
   }
@@ -145,11 +137,58 @@ class _SimplifiedDirectionsScreenState
                 const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
             child: Column(
               children: [
+                Row(
+                  children: [
+                    Checkbox(
+                      value: useGeoLocation,
+                      onChanged: (bool? value) async {
+                        enableDirectionsButton = false;
+                        setState(() {
+                          useGeoLocation = value!;
+                        });
+                        if (useGeoLocation) {
+                          await directions.getCurrentLocation(context);
+                          if (directions.currentPosition != null) {
+                            _originFieldController.text =
+                                'Latitude: ${directions.currentPosition!.latitude}, Longitude: ${directions.currentPosition!.longitude}';
+                          }
+                        } else {
+                          _originFieldController.clear();
+                        }
+                        enableDirectionsButton = true;
+                        setState(() {});
+                      },
+                    ),
+                    const Text(
+                      'Use Location',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                TextField(
+                  controller: _originFieldController,
+                  enabled: !useGeoLocation,
+                  decoration: const InputDecoration(
+                    labelText: 'Origin',
+                  ),
+                ),
+                TextField(
+                  controller: _destinationFieldController,
+                  decoration: const InputDecoration(
+                    labelText: 'Destination',
+                  ),
+                ),
                 const SizedBox(
                   height: 10,
                 ),
                 Row(
                   children: [
+                    ElevatedButton(
+                      onPressed: enableDirectionsButton
+                          ? _getUserFieldsAndFetchHumanDirections
+                          : null,
+                      child: const Text('Get Directions'),
+                    ),
                     const SizedBox(
                       width: 10,
                     ),

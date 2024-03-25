@@ -29,7 +29,7 @@ class PlacesController {
         }
       }
     };
-    if (types.contains(PlaceType.any)) {
+    if (!types.contains(PlaceType.any)) {
       requestBodyPrototype['includedTypes'] = types;
     }
     final requestBody = jsonEncode(requestBodyPrototype);
