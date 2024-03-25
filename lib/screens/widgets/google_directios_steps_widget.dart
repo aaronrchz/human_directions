@@ -35,10 +35,6 @@ class _GoogleDirectiosStepsState extends State<GoogleDirectionsSteps> {
               children: [
                 ...?widget.steps?.map(
                   (e) {
-                    /*if (kDebugMode) {
-                                  print(
-                                      '$stepsCounter - De: ${e.startLocation.toString()} Hacia: ${e.endLocation.toString()}, Instrucciones: ${e.instructions},Distancia:${e.distance?.text}  ,Duración Estimada:${e.duration?.text}  , Maniobra: ${e.maneuver} ');
-                                }*/
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -52,17 +48,17 @@ class _GoogleDirectiosStepsState extends State<GoogleDirectionsSteps> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text('De: ${e.startLocation.toString()}'),
-                                Text(
-                                    'Lugares cercanos: ${widget.nearbyPlacesFrom[auxStepCounter++]}'),
-                              Text('Hacia: ${e.endLocation.toString()}'),
-                                Text(
-                                    'Lugares cercanos: ${widget.nearbyPlacesTo[auxStepCounter1++]}'),
-                              Text('Distamcia: ${e.distance?.text}'),
-                              Text('Duración Estimada: ${e.duration?.text} '),
-                              Text('Instrucciones: ${e.instructions}'),
+                              Text('From: ${e.startLocation.toString()}'),
+                              Text(
+                                  'Nearby places: ${widget.nearbyPlacesFrom[auxStepCounter++]}'),
+                              Text('To: ${e.endLocation.toString()}'),
+                              Text(
+                                  'Nearby Places: ${widget.nearbyPlacesTo[auxStepCounter1++]}'),
+                              Text('Distance: ${e.distance?.text}'),
+                              Text('Estimated time: ${e.duration?.text} '),
+                              Text('Instructions: ${e.instructions}'),
                               if (e.maneuver != null)
-                                Text('Maniobra: ${e.maneuver}'),
+                                Text('Maneuver: ${e.maneuver}'),
                               const SizedBox(
                                 height: 5,
                               ),

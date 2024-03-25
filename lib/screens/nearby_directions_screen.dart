@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:human_directios/componets/llm/recomendations_parse.dart';
-import 'package:human_directios/componets/llm/supported_lenguages.dart';
+import 'package:human_directios/componets/llm/supported_languages.dart';
 import 'package:human_directios/human_directions.dart';
 
 class RequestDNearbyPlacesScreen extends StatefulWidget {
@@ -23,7 +23,7 @@ class RequestDNearbyPlacesScreen extends StatefulWidget {
 class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
   late HumanDirections directionsController;
   final TextEditingController _textEditingController =
-      TextEditingController(text: 'donde hay un bar?');
+      TextEditingController(text: 'Where can I get a drink?');
   late Future<NearbyPlacesRecomendationsObject?> _futureResult;
 
   Future<NearbyPlacesRecomendationsObject?> _handleSubmit() async {
@@ -32,7 +32,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
         googleDirectionsApiKey: widget.googleDirectionsApiKey,
         travelMode: TravelMode.walking,
         unitSystem: UnitSystem.metric,
-        openAIlenguage: OpenAILenguage.es);
+        openAIlanguage: OpenAILanguage.es);
     String input = _textEditingController.text;
     return await directionsController
         .getNearbyRecommendations(input, context)
@@ -50,7 +50,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text('Recomendacion de lugares cercanos'),
+        title: const Text('Nearby places recommendations search'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: widget.onBack,
@@ -64,7 +64,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
               TextField(
                 controller: _textEditingController,
                 decoration: const InputDecoration(
-                  labelText: 'Solicitud',
+                  labelText: 'Prompt',
                 ),
               ),
               ElevatedButton(
@@ -73,7 +73,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                     _futureResult = _handleSubmit();
                   });
                 },
-                child: const Text('Solicitar'),
+                child: const Text('Request'),
               ),
               FutureBuilder<NearbyPlacesRecomendationsObject?>(
                 future: _futureResult,
@@ -88,7 +88,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                         SizedBox(
                           height: 10,
                         ),
-                        Text("Obteniendo recomendaciones\nPor favor espere...")
+                        Text("Fetching recommendation\nPlease wait...")
                       ],
                     );
                   } else if (snapshot.hasError) {
@@ -96,7 +96,6 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                   } else if (snapshot.hasData) {
                     NearbyPlacesRecomendationsObject data = snapshot.data!;
                     if (data.hasError) {
-                      print(data.errorMessage);
                       return Text(data.errorMessage!);
                     }
                     if (data.recommendations != null) {
@@ -129,9 +128,10 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                                           ],
                                         ),
                                         children: [
-                                          Text('Abierto: ${e.openingHours}'),
                                           Text(
-                                              'Numero de telefono: ${e.phoneNumber}'),
+                                              'Opening hours: ${e.openingHours}'),
+                                          Text(
+                                              'Phone number: ${e.phoneNumber}'),
                                           Image.network(data
                                                       .recomendationPhotos!
                                                       .placePhotoUriCollection[
@@ -143,7 +143,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                                                   ('${directionsController.currentPosition!.latitude}, ${directionsController.currentPosition!.longitude}'),
                                                   e.address);
                                             },
-                                            child: const Text('¡Quiero ir!'),
+                                            child: const Text('I want to go!'),
                                           ),
                                         ],
                                       );

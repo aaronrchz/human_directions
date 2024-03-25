@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/componets/llm/supported_lenguages.dart';
+import 'package:human_directios/componets/llm/supported_languages.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 
@@ -42,8 +42,8 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
     directions = HumanDirections(
       openAiApiKey: widget.openAiApiKey,
       googleDirectionsApiKey: widget.googleDirectionsApiKey,
-      openAIlenguage: OpenAILenguage.es,
-      googlelenguage: 'es-419',
+      openAIlanguage: OpenAILanguage.en,
+      googlelanguage: 'en',
       placesRadious: 50,
     );
     _originFieldController.text = '34 Bd Garibaldi, 75015 Paris, Francia';
@@ -52,9 +52,9 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
   }
 
   void _fetchDirections() async {
-    if(useGeoLocation){
+    if (useGeoLocation) {
       directions.fetchHumanDirectionsFromLocation(destination);
-    }else{
+    } else {
       directions.fetchHumanDirections(origin, destination);
     }
     setState(() {
@@ -113,7 +113,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
     } else {
       setState(() {
         googleDirectionsStepsWidget =
-            const ErrorOnRequestWidget('Entrada invalida');
+            const ErrorOnRequestWidget('invalid inputa');
         humanDirectionsWidget = const ErrorOnRequestWidget('Entrada invalida');
       });
     }
@@ -156,9 +156,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
                           _originFieldController.clear();
                         }
                         enableDirectionsButton = true;
-                        setState(() {
-                          
-                        });
+                        setState(() {});
                       },
                     ),
                     const Text(
@@ -171,13 +169,13 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
                   controller: _originFieldController,
                   enabled: !useGeoLocation,
                   decoration: const InputDecoration(
-                    labelText: 'Origen',
+                    labelText: 'Origin',
                   ),
                 ),
                 TextField(
                   controller: _destinationFieldController,
                   decoration: const InputDecoration(
-                    labelText: 'Destino',
+                    labelText: 'Destination',
                   ),
                 ),
                 const SizedBox(
@@ -186,7 +184,9 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: enableDirectionsButton ? _getUserFieldsAndFetchHumanDirections : null,
+                      onPressed: enableDirectionsButton
+                          ? _getUserFieldsAndFetchHumanDirections
+                          : null,
                       child: const Text('Get Directions'),
                     ),
                     const SizedBox(

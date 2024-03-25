@@ -53,8 +53,6 @@ class PlacesController {
       }
       return data['places'];
     } else {
-      print(
-          'Failed to load nearby places: ${response.statusCode}: ${response.body}');
       throw Exception(
           'Failed to load nearby places: ${response.statusCode}: ${response.body}');
     }
@@ -146,7 +144,6 @@ class PlacesController {
       }
       return data['photos'];
     } else {
-      print(responseBody);
       throw Exception(
           'Failed to fetch places photos: ${response.statusCode}: ${response.body}');
     }

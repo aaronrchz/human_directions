@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/componets/llm/supported_lenguages.dart';
+import 'package:human_directios/componets/llm/supported_languages.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 
@@ -21,10 +21,12 @@ class SimplifiedDirectionsScreen extends StatefulWidget {
   final String destination;
   final Function() onBack;
   @override
-  State<SimplifiedDirectionsScreen> createState() => _SimplifiedDirectionsScreenState();
+  State<SimplifiedDirectionsScreen> createState() =>
+      _SimplifiedDirectionsScreenState();
 }
 
-class _SimplifiedDirectionsScreenState extends State<SimplifiedDirectionsScreen> {
+class _SimplifiedDirectionsScreenState
+    extends State<SimplifiedDirectionsScreen> {
   String origin = '';
   String destination = '';
   String requestResult = '';
@@ -44,23 +46,23 @@ class _SimplifiedDirectionsScreenState extends State<SimplifiedDirectionsScreen>
     directions = HumanDirections(
       openAiApiKey: widget.openAiApiKey,
       googleDirectionsApiKey: widget.googleDirectionsApiKey,
-      openAIlenguage: OpenAILenguage.es,
-      googlelenguage: 'es-419',
+      openAIlanguage: OpenAILanguage.en,
+      googlelanguage: 'en',
       placesRadious: 50,
     );
     _getUserFieldsAndFetchHumanDirections();
   }
 
-   @override
+  @override
   void dispose() {
     _timer.cancel(); // Detiene el temporizador cuando la pantalla se destruye
     super.dispose();
   }
 
   void _fetchDirections() async {
-    if(useGeoLocation){
+    if (useGeoLocation) {
       directions.fetchHumanDirectionsFromLocation(destination);
-    }else{
+    } else {
       directions.fetchHumanDirections(origin, destination);
     }
     setState(() {
@@ -119,8 +121,8 @@ class _SimplifiedDirectionsScreenState extends State<SimplifiedDirectionsScreen>
     } else {
       setState(() {
         googleDirectionsStepsWidget =
-            const ErrorOnRequestWidget('Entrada invalida');
-        humanDirectionsWidget = const ErrorOnRequestWidget('Entrada invalida');
+            const ErrorOnRequestWidget('Invalid input');
+        humanDirectionsWidget = const ErrorOnRequestWidget('Invalid input');
       });
     }
   }

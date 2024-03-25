@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               const Text(
-                  'Human directions, es un paquete que intenta mejorar las indicaciones de navegación GPS, usando inteligencia artificial para reorganizar dichas indicaciones a un vocabulario más familiar y entendible para cualquier persona.',
+                  'Human directions is a package that tries to improve the instructions given by a GPS navigation system, using AI to re-organize said instructions to a more familiar vocabulary, understandable to almost anyone',
                   style: TextStyle(
                     fontSize: 18.0,
                     color: Colors.white,
@@ -39,13 +39,13 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   onPressedDirectionsNearby();
                 },
-                child: const Text('Recomendaciónes de lugares cercanos'),
+                child: const Text('Nearby places recommendations search'),
               ),
               ElevatedButton(
                 onPressed: () {
                   onPressedHumanDirections();
                 },
-                child: const Text('Direcciones basadas en origen y destino'),
+                child: const Text('Origin - destination based directions'),
               )
             ],
           ),

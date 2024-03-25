@@ -7,7 +7,7 @@ import 'package:human_directios/componets/llm/models.dart';
 import 'package:human_directios/componets/llm/system_messages.dart';
 import 'package:human_directios/componets/llm/tools/tools.dart';
 import 'package:human_directios/componets/places/places.dart';
-import 'package:human_directios/componets/llm/supported_lenguages.dart';
+import 'package:human_directios/componets/llm/supported_languages.dart';
 import 'package:human_directios/componets/location.dart';
 import 'package:human_directios/componets/llm/recomendations_parse.dart';
 
@@ -29,9 +29,9 @@ class HumanDirections {
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
-  String openAIlenguage;
+  String openAIlanguage;
   String prompt;
-  String googlelenguage;
+  String googlelanguage;
   UnitSystem unitSystem;
   TravelMode travelMode;
   double placesRadious;
@@ -42,17 +42,17 @@ class HumanDirections {
       {required this.openAiApiKey,
       required this.googleDirectionsApiKey,
       this.prompt = '\n',
-      this.googlelenguage = 'en',
+      this.googlelanguage = 'en',
       this.unitSystem = UnitSystem.metric,
       this.travelMode = TravelMode.walking,
-      this.openAIlenguage = OpenAILenguage.en,
+      this.openAIlanguage = OpenAILanguage.en,
       this.placesRadious = 50.0,
       this.gptModel = OpenAiModelsNames.gpt4,
       this.gptModelTemperature = 0.4})
       : nearbyplacesController =
             PlacesController(placesApiKey: googleDirectionsApiKey),
         systenMessages =
-            HumanDirectionsLLMSystenMessages(openAIlenguage: openAIlenguage);
+            HumanDirectionsLLMSystenMessages(openAIlenguage: openAIlanguage);
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => requestResult;
@@ -95,7 +95,7 @@ class HumanDirections {
         destination: destination,
         travelMode: travelMode,
         unitSystem: unitSystem,
-        language: googlelenguage);
+        language: googlelanguage);
 
     directionsService.route(request,
         (DirectionsResult response, DirectionsStatus? status) {
@@ -215,7 +215,6 @@ class HumanDirections {
       for (var streamChatCompletion in completions) {
         final content = streamChatCompletion.choices.first.delta.content;
         secondResponseMessage += (content?[0]?.text ?? '');
-        print(content);
       }
       if (secondResponseMessage.length > 10) {
         final output =
