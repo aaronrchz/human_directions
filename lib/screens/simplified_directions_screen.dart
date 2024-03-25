@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/componets/supported_lenguages.dart';
+import 'package:human_directios/components/llm/supported_languages.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 
-import 'package:human_directios/widgets/google_directios_steps_widget.dart';
-import 'package:human_directios/widgets/human_directios_widget.dart';
-import 'package:human_directios/widgets/request_status_widgets.dart';
+import 'package:human_directios/screens/widgets/google_directios_steps_widget.dart';
+import 'package:human_directios/screens/widgets/human_directios_widget.dart';
+import 'package:human_directios/screens/widgets/request_status_widgets.dart';
 
-class DirectionsScreen extends StatefulWidget {
-  const DirectionsScreen(
+class SimplifiedDirectionsScreen extends StatefulWidget {
+  const SimplifiedDirectionsScreen(
       {required this.openAiApiKey,
       required this.googleDirectionsApiKey,
+      required this.origin,
+      required this.destination,
+      required this.onBack,
       super.key});
   final String openAiApiKey;
   final String googleDirectionsApiKey;
+  final String origin;
+  final String destination;
+  final Function() onBack;
   @override
-  State<DirectionsScreen> createState() => _DirectionsScreenState();
+  State<SimplifiedDirectionsScreen> createState() =>
+      _SimplifiedDirectionsScreenState();
 }
 
-class _DirectionsScreenState extends State<DirectionsScreen> {
+class _SimplifiedDirectionsScreenState
+    extends State<SimplifiedDirectionsScreen> {
   String origin = '';
   String destination = '';
   String requestResult = '';
@@ -26,32 +34,35 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
   Time resolvedTime = Time();
   bool useGeoLocation = false;
   bool enableDirectionsButton = true;
+  late Timer _timer;
 
   late HumanDirections directions;
 
   Widget googleDirectionsStepsWidget = const WaitingForUserInput();
   Widget humanDirectionsWidget = const WaitingForUserInput();
-  final TextEditingController _originFieldController = TextEditingController();
-  final TextEditingController _destinationFieldController =
-      TextEditingController();
   @override
   void initState() {
     super.initState();
     directions = HumanDirections(
       openAiApiKey: widget.openAiApiKey,
       googleDirectionsApiKey: widget.googleDirectionsApiKey,
-      openAIlenguage: OpenAILenguage.es,
-      googlelenguage: 'es-419',
+      openAIlanguage: OpenAILanguage.en,
+      googlelanguage: 'en',
+      placesRadious: 50,
     );
-    _originFieldController.text = '34 Bd Garibaldi, 75015 Paris, Francia';
-    _destinationFieldController.text =
-        'Champ de Mars, 5 Av. Anatole France, 75007 Paris, Francia';
+    _getUserFieldsAndFetchHumanDirections();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Detiene el temporizador cuando la pantalla se destruye
+    super.dispose();
   }
 
   void _fetchDirections() async {
-    if(useGeoLocation){
+    if (useGeoLocation) {
       directions.fetchHumanDirectionsFromLocation(destination);
-    }else{
+    } else {
       directions.fetchHumanDirections(origin, destination);
     }
     setState(() {
@@ -63,7 +74,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
               'Awaiting openAI directions Results\nPlease Hold on...');
     });
 
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (directions.fetchResultFlag == 0) {
           requestResult = directions.requestResult;
@@ -101,8 +112,8 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
   }
 
   void _getUserFieldsAndFetchHumanDirections() {
-    String tempOrigin = _originFieldController.text;
-    String tempDestination = _destinationFieldController.text;
+    String tempOrigin = widget.origin;
+    String tempDestination = widget.destination;
     if (tempOrigin.isNotEmpty && tempDestination.isNotEmpty) {
       origin = tempOrigin;
       destination = tempDestination;
@@ -110,8 +121,8 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
     } else {
       setState(() {
         googleDirectionsStepsWidget =
-            const ErrorOnRequestWidget('Entrada invalida');
-        humanDirectionsWidget = const ErrorOnRequestWidget('Entrada invalida');
+            const ErrorOnRequestWidget('Invalid input');
+        humanDirectionsWidget = const ErrorOnRequestWidget('Invalid input');
       });
     }
   }
@@ -122,6 +133,10 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Human Direction v0'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: widget.onBack,
+        ),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -130,58 +145,11 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
                 const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Checkbox(
-                      value: useGeoLocation,
-                      onChanged: (bool? value) async {
-                        enableDirectionsButton = false;
-                        setState(() {
-                          useGeoLocation = value!;
-                        });
-                        if (useGeoLocation) {
-                          await directions.getCurrentLocation(context);
-                          if (directions.currentPosition != null) {
-                            _originFieldController.text =
-                                'Latitud: ${directions.currentPosition!.latitude}, Longitud: ${directions.currentPosition!.longitude}';
-                          }
-                        } else {
-                          _originFieldController.clear();
-                        }
-                        enableDirectionsButton = true;
-                        setState(() {
-                          
-                        });
-                      },
-                    ),
-                    const Text(
-                      'Usar ubicación actual',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-                TextField(
-                  controller: _originFieldController,
-                  enabled: !useGeoLocation,
-                  decoration: const InputDecoration(
-                    labelText: 'Origen',
-                  ),
-                ),
-                TextField(
-                  controller: _destinationFieldController,
-                  decoration: const InputDecoration(
-                    labelText: 'Destino',
-                  ),
-                ),
                 const SizedBox(
                   height: 10,
                 ),
                 Row(
                   children: [
-                    ElevatedButton(
-                      onPressed: enableDirectionsButton ? _getUserFieldsAndFetchHumanDirections : null,
-                      child: const Text('Get Directions'),
-                    ),
                     const SizedBox(
                       width: 10,
                     ),

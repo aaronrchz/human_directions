@@ -6,10 +6,18 @@ This project uses openAI's chatgpt to translate the output from Google direction
 
 ## Usage
 This project is built in flutter and dart.
-
+|
 For the moment, this project is aimed to be on a mobile device, hence the main file structures the output in a screen in which all the data output is shown in a simple way.
 
 to get the directions, after building the object of class HumanDirections (Which requires two api keys, GoogleDirections and openAI), it is needed to call the method fetchHumanDirections giving the origin and destination as arguments. Then you can access the data output through the members of the object class HumanDirections. But the main member is called humanDirectionsResult which contains the chatgpt output as a string.
+
+### Features
+There are two main features on this package:
+The humanization of directions: the humanization is as described above, based on and origin and destination, the package outputs the directions, (the user can use its geolocation as the origin).
+
+The recommendation of places: given an input as "where can i get a drink?" using the google_places API the AI will choose a set of places to recommend the user.
+
+As for the showcase app, the recommendations output can be used to get the directions.
 
 ### Example App
 Using the app provided, it is possible to test the package just using the UI by providing an origin and destination in the corresponding text fields.
@@ -27,5 +35,7 @@ dart_openai: ^5.1.0 : https://pub.dev/packages/dart_openai
 google_directions_api: ^0.10.0 : https://pub.dev/packages/google_directions_api/example
 
 flutter_dotenv: ^5.1.0 : https://pub.dev/packages/flutter_dotenv
+
+geolocation: ^11.0.0 : https://pub.dev/packages/geolocator
 
 http:  ^1.1.0
