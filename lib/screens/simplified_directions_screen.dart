@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/componets/llm/supported_languages.dart';
+import 'package:human_directios/components/llm/supported_languages.dart';
 import 'package:human_directios/human_directions.dart';
 import 'dart:async';
 

@@ -1,8 +1,8 @@
 import 'package:dart_openai/dart_openai.dart';
 
-import 'package:human_directios/componets/llm/tools/arguments.dart';
-import 'package:human_directios/componets/llm/tools/tool_builder.dart';
-import 'package:human_directios/componets/places/places_types.dart';
+import 'package:human_directios/components/llm/tools/arguments.dart';
+import 'package:human_directios/components/llm/tools/tool_builder.dart';
+import 'package:human_directios/components/places/places_types.dart';
 
 class HumanDirectionsLLMTools {
   static OpenAIToolModel recommendationTool =

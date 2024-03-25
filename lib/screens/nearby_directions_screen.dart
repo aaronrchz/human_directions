@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_directions_api/google_directions_api.dart';
-import 'package:human_directios/componets/llm/recomendations_parse.dart';
-import 'package:human_directios/componets/llm/supported_languages.dart';
+import 'package:human_directios/components/llm/recomendations_parse.dart';
+import 'package:human_directios/components/llm/supported_languages.dart';
 import 'package:human_directios/human_directions.dart';
 
 class RequestDNearbyPlacesScreen extends StatefulWidget {

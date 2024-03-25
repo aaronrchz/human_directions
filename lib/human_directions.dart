@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart' hide Step;
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:dart_openai/dart_openai.dart';
-import 'package:human_directios/componets/llm/models.dart';
-import 'package:human_directios/componets/llm/system_messages.dart';
-import 'package:human_directios/componets/llm/tools/tools.dart';
-import 'package:human_directios/componets/places/places.dart';
-import 'package:human_directios/componets/llm/supported_languages.dart';
-import 'package:human_directios/componets/location.dart';
-import 'package:human_directios/componets/llm/recomendations_parse.dart';
+import 'package:human_directios/components/llm/models.dart';
+import 'package:human_directios/components/llm/system_messages.dart';
+import 'package:human_directios/components/llm/tools/tools.dart';
+import 'package:human_directios/components/places/places.dart';
+import 'package:human_directios/components/llm/supported_languages.dart';
+import 'package:human_directios/components/location.dart';
+import 'package:human_directios/components/llm/recomendations_parse.dart';
 
 class HumanDirections {
   /* flags */
