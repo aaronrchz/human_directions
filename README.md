@@ -1,8 +1,6 @@
 # ciphy: human_directios v0
 
-A project aimed to make googleMaps directions more readable, in order to enable the user to get anywhere without looking at any map.
-
-This project uses openAI's chatgpt to translate the output from Google directions to a more humane instruction.
+Human directions is a package that tries to improve the instructions given by a GPS navigation system, using AI to re-organize said instructions to a more familiar vocabulary, understandable to almost anyone.
 
 ## Usage
 This project is built in flutter and dart.
@@ -51,12 +49,12 @@ void main() {
 ```
 
 ## Requirements
-### Api keys
-the api keys must be in a file called '.env' inside the assets folder.
-Then the variables for the keys need to be called:
-OPENAI_API_KEY=key
-GOOGLE_DIRECTIOS_API_KEY=key
+
+### Api keys 
+This package needs two api keys to work, a Google cloud API key (enabled for directions API and places(new) API) and a OpenAI API key
+
 ### Dependencies.
+
 dart_openai: ^5.1.0 : https://pub.dev/packages/dart_openai
 
 google_directions_api: ^0.10.0 : https://pub.dev/packages/google_directions_api/example
