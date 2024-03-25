@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/components/llm/supported_languages.dart';
-import 'package:human_directios/human_directions.dart';
+import '../../../components/llm/supported_languages.dart';
+import '../../../human_directions.dart';
 import 'dart:async';
 
-import 'package:human_directios/example/showcase_app/screens/widgets/google_directios_steps_widget.dart';
-import 'package:human_directios/example/showcase_app/screens/widgets/human_directios_widget.dart';
-import 'package:human_directios/example/showcase_app/screens/widgets/request_status_widgets.dart';
+import '../screens/widgets/google_directios_steps_widget.dart';
+import '../screens/widgets/human_directios_widget.dart';
+import '../screens/widgets/request_status_widgets.dart';
 
 class SimplifiedDirectionsScreen extends StatefulWidget {
   const SimplifiedDirectionsScreen(

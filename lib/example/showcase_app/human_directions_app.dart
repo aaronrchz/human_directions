@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:human_directios/example/showcase_app/screens/directions_screen.dart';
-import 'package:human_directios/example/showcase_app/screens/home_screen.dart';
-import 'package:human_directios/example/showcase_app/screens/nearby_directions_screen.dart';
-import 'package:human_directios/example/showcase_app/screens/simplified_directions_screen.dart';
+import 'screens/directions_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/nearby_directions_screen.dart';
+import 'screens/simplified_directions_screen.dart';
 
 class HumanDirectionsApp extends StatefulWidget {
   const HumanDirectionsApp(

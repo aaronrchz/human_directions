@@ -1,5 +1,5 @@
 import 'package:dart_openai/dart_openai.dart';
-import 'package:human_directios/components/places/places_types.dart';
+import '../places/places_types.dart';
 
 class HumanDirectionsLLMSystenMessages {
   final String openAIlenguage;
