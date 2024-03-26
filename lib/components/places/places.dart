@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:http/http.dart' as http;
-import 'package:human_directios/components/places/places_types.dart';
+import 'places_types.dart';
 
 class PlacesController {
   String placesSummary = '';
@@ -29,7 +29,7 @@ class PlacesController {
         }
       }
     };
-    if (types.contains(PlaceType.any)) {
+    if (!types.contains(PlaceType.any)) {
       requestBodyPrototype['includedTypes'] = types;
     }
     final requestBody = jsonEncode(requestBodyPrototype);

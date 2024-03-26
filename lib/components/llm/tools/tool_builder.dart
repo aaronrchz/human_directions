@@ -1,5 +1,5 @@
 import 'package:dart_openai/dart_openai.dart';
-import 'package:human_directios/components/llm/tools/arguments.dart';
+import '../tools/arguments.dart';
 
 class ToolBuilder {
   final ToolComponents components;
