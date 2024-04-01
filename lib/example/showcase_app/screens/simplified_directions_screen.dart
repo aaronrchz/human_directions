@@ -55,13 +55,13 @@ class _SimplifiedDirectionsScreenState
 
   @override
   void dispose() {
-    _timer.cancel(); // Detiene el temporizador cuando la pantalla se destruye
+    _timer.cancel();
     super.dispose();
   }
 
   void _fetchDirections() async {
     if (useGeoLocation) {
-      directions.fetchHumanDirectionsFromLocation(destination);
+      directions.fetchHumanDirectionsFromLocation(destination, context);
     } else {
       directions.fetchHumanDirections(origin, destination);
     }

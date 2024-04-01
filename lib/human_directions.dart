@@ -26,6 +26,7 @@ class HumanDirections {
   List<String> nearbyPlacesFrom = [];
   List<String> nearbyPlacesTo = [];
   GeoCoord? currentPosition;
+  String? lastExeption;
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
@@ -60,19 +61,30 @@ class HumanDirections {
   int get fetchHumanDirectionsFlag => humanDirectionsFlag;
   String? get updateFetchHumanDirections => humanDirectionsResult;
   /*Methods */
-  int fetchHumanDirections(String origin, String destination) {
-    _fetchDirections(origin, destination);
-    return 0;
-  }
-
-  int fetchHumanDirectionsFromLocation(String destination) {
-    if (currentPosition == null) {
+  Future<int> fetchHumanDirections(String origin, String destination) async {
+    try {
+      await _fetchDirections(origin, destination);
+      return 0;
+    } on Exception catch (e) {
+      lastExeption = e.toString();
       return 1;
     }
-    _fetchDirections(
-        '${currentPosition?.latitude},${currentPosition?.longitude}',
-        destination);
-    return 0;
+  }
+
+  Future<int> fetchHumanDirectionsFromLocation(
+      String destination, BuildContext context) async {
+    try {
+      if (currentPosition == null) {
+        await getCurrentLocation(context);
+      }
+      await _fetchDirections(
+          '${currentPosition?.latitude},${currentPosition?.longitude}',
+          destination);
+      return 0;
+    } on Exception catch (e) {
+      lastExeption = e.toString();
+      return 1;
+    }
   }
 
   Future<void> getCurrentLocation(BuildContext context) async {
@@ -86,7 +98,7 @@ class HumanDirections {
         .timeout(const Duration(minutes: 2));
   }
 
-  int _fetchDirections(String origin, String destination) {
+  Future<int> _fetchDirections(String origin, String destination) async {
     DirectionsService directionsService = DirectionsService();
     DirectionsService.init(googleDirectionsApiKey);
 
@@ -97,7 +109,7 @@ class HumanDirections {
         unitSystem: unitSystem,
         language: googlelanguage);
 
-    directionsService.route(request,
+    await directionsService.route(request,
         (DirectionsResult response, DirectionsStatus? status) {
       if (status == DirectionsStatus.ok) {
         resolvedDistance.text = response.routes![0].legs![0].distance?.text;

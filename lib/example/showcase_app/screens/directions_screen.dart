@@ -53,7 +53,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
 
   void _fetchDirections() async {
     if (useGeoLocation) {
-      directions.fetchHumanDirectionsFromLocation(destination);
+      directions.fetchHumanDirectionsFromLocation(destination, context);
     } else {
       directions.fetchHumanDirections(origin, destination);
     }
