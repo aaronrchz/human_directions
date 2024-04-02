@@ -102,7 +102,7 @@ class PlacesController {
     }
     for (var element in places) {
       summary =
-          '$summary${element['displayName']['text']}(${element['types']}), ';
+          '$summary${element['displayName']['text']}(${element['types'][0]}, ${element['types'][1]}), ';
     }
     return summary;
   }

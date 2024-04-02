@@ -15,6 +15,15 @@ class HumanDirectionsLLMSystenMessages {
           Be extra friendly.
           Always use the given nearby places to better guide the user.
           If there is not an instruction set, just say 'Ooops! it seems there are not valid instructions.'
+          Use the next format to give your response:
+          {
+            "start_message": "any message to give context for the user before giving the instructions",
+            "steps":"a list with each converted instruction as a map"[{
+              "number": "the number odf the instruction, must be a number",
+              "instruction": "the converted instruction",
+            }],
+            "end_message": "any context closing message for the user"
+          }
           Answer the user in $openAIlenguage. 
           """),
           ],
@@ -30,17 +39,17 @@ class HumanDirectionsLLMSystenMessages {
           Avoid using Links.
           The output mus be a map with the following format and none filed must be null, if any field is missing put the string "missing" instead:
           {
-            'start_message': 'any messsage to give contex to the user',
-            'recommendations' : [{
-              'id': 'place id given by the api'
-              'name': 'String, Place name',
-              'address': 'String, Place Address',
-              'rating': 'String, Place rating',
-              'description': 'String, a shrot polace description based on place type, and name',
-              'opening_hours': 'String, Place Opening hours' ,
-              'phone_numer': 'String, place phone number'
+            "start_message": "any messsage to give contex to the user",
+            "recommendations" : [{
+              "id": "place id given by the api"
+              "name": "String, Place name",
+              "address": "String, Place Address",
+              "rating": 'String, Place rating',
+              "description": "String, a shrot polace description based on place type, and name",
+              "opening_hours": "String, Place Opening hours" ,
+              "phone_numer": "String, place phone number"
             }],
-            'closing_message': 'any messsage to give contex to the user' 
+            "closing_message": "any messsage to give contex to the user" 
           }
           None part of the response must be outside of the map
           answer the user in: $openAIlenguage.

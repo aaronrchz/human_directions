@@ -2,6 +2,24 @@
 
 Human directions is a package that tries to improve the instructions given by a GPS navigation system, using AI to re-organize said instructions to a more familiar vocabulary, understandable to almost anyone.
 
+## Requirements
+
+### Api keys 
+This package needs two api keys to work, a Google cloud API key (enabled for directions API and places(new) API) and a OpenAI API key
+
+### Dependencies.
+
+dart_openai: ^5.1.0 : https://pub.dev/packages/dart_openai
+
+google_directions_api: ^0.10.0 : https://pub.dev/packages/google_directions_api/example
+
+flutter_dotenv: ^5.1.0 : https://pub.dev/packages/flutter_dotenv
+
+geolocation: ^11.0.0 : https://pub.dev/packages/geolocator
+
+http:  ^1.1.0
+
+
 ## Usage
 This project is built in flutter and dart.
 |
@@ -47,20 +65,145 @@ void main() {
 }
 
 ```
+### Independet Examples
 
-## Requirements
+#### Get Origin-Destination based Directions
 
-### Api keys 
-This package needs two api keys to work, a Google cloud API key (enabled for directions API and places(new) API) and a OpenAI API key
+```
+/*This is a simplified example of how to use the the human_directions package, however the controller 
+has more parameters that can change the output, such as the lenguage */
 
-### Dependencies.
+import 'package:human_directions/human_directions.dart';
+import 'package:human_directions/components/llm/steps_parse.dart';
 
-dart_openai: ^5.1.0 : https://pub.dev/packages/dart_openai
+void getHumanDirectionsExample() async {
+  const String openAiApiKey = 'YOUR_API_KEY';
+  const String googleDirectionsApiKey = 'YOUR_API_KEY';
+  final HumanDirections controller = HumanDirections(
+      openAiApiKey: openAiApiKey,
+      googleDirectionsApiKey: googleDirectionsApiKey);
+  const String origin = '2220 Louisiana Blvd NE, Albuquerque, NM 87110';
+  //or
+  // const String origin = '35.10306238493775, -106.56850233266698';
+  const String destination = '601 Eubank Blvd SE, Albuquerque, NM 87123';
+  //or
+  // const String destination = '35.066128531595254, -106.533857392472'
 
-google_directions_api: ^0.10.0 : https://pub.dev/packages/google_directions_api/example
+  int directionsFlag =
+      await controller.fetchHumanDirections(origin, destination);
+  if (directionsFlag == 0) {
+    print(controller
+        .directionsStepsList); //contains a list with all the googleDirections Api Steps (and placesApi nearby places for each step)
+    print(controller
+        .humanDirectionsResult); //this contains a string that's formatted as a map
+    /*Map format:
+    {
+      "start_message": "any message to give context for the user before giving the instructions",
+      "steps":"a list with each converted instruction as a map"[{
+        "number": "the number odf the instruction", //int
+        "instruction": "the converted instruction",
+      }],
+      "end_message": "any context closing message for the user"
+    } 
+    the package contains a parse class that can decode the result to a more usable object*/
+    HumanDirectionsOutput output =
+        HumanDirectionsOutput.fromString(controller.humanDirectionsResult!);
+    print(output.startMessage);
+    for (var step in output.steps) {
+      print('${step.number} - ${step.instruction}');
+    }
+    print(output.endMessage);
+  }
+}
 
-flutter_dotenv: ^5.1.0 : https://pub.dev/packages/flutter_dotenv
 
-geolocation: ^11.0.0 : https://pub.dev/packages/geolocator
+```
 
-http:  ^1.1.0
+#### Get Current Location to Destination based Directions
+
+```
+import 'package:human_directions/human_directions.dart';
+import 'package:human_directions/components/llm/steps_parse.dart';
+
+/*This is a simplified example of how to use the the human_directions package, however the controller 
+has more parameters that can change the output, such as the lenguage */
+void getHumanDirectionsFromLocationExample(BuildContext context) async {
+  const String openAiApiKey = 'YOUR_API_KEY';
+  const String googleDirectionsApiKey = 'YOUR_API_KEY';
+  final HumanDirections controller = HumanDirections(
+      openAiApiKey: openAiApiKey,
+      googleDirectionsApiKey: googleDirectionsApiKey);
+
+  const String destination = '601 Eubank Blvd SE, Albuquerque, NM 87123';
+  //or
+  // const String destination = '35.066128531595254, -106.533857392472'
+
+  int directionsFlag =
+      await controller.fetchHumanDirectionsFromLocation(destination, context);
+  //context is required as the GeoLocation package needs to check if there's permission to use the location
+  if (directionsFlag == 0) {
+    print(controller
+        .directionsStepsList); //contains a list with all the googleDirections Api Steps (and placesApi nearby places for each step)
+    print(controller
+        .humanDirectionsResult); //this contains a string that's formatted as a map
+    /*Map format:
+    {
+      "start_message": "any message to give context for the user before giving the instructions",
+      "steps":"a list with each converted instruction as a map"[{
+        "number": "the number odf the instruction", //int
+        "instruction": "the converted instruction",
+      }],
+      "end_message": "any context closing message for the user"
+    } 
+    the package contains a parse class that can decode the result to a more usable object*/
+    HumanDirectionsOutput output =
+        HumanDirectionsOutput.fromString(controller.humanDirectionsResult!);
+    print(output.startMessage);
+    for (var step in output.steps) {
+      print('${step.number} - ${step.instruction}');
+    }
+    print(output.endMessage);
+  }
+}
+
+```
+
+#### Get recommendatios for nearby places.
+
+```
+import 'package:human_directions/human_directions.dart';
+import 'package:human_directions/components/llm/recomendations_parse.dart';
+
+/*This is a simplified example of how to use the the human_directions package, however the controller 
+has more parameters that can change the output, such as the lenguage */
+void getNearbyPlacesRecommendations(BuildContext context) async {
+  const String openAiApiKey = 'YOUR_API_KEY';
+  const String googleDirectionsApiKey = 'YOUR_API_KEY';
+  final HumanDirections controller = HumanDirections(
+      openAiApiKey: openAiApiKey,
+      googleDirectionsApiKey: googleDirectionsApiKey);
+  const String prompt = 'Where can i get a drink?';
+
+  NearbyPlacesRecomendationsObject recommendations =
+      await controller.getNearbyRecommendations(prompt, context);
+
+  if (recommendations.hasError) {
+    print(recommendations.errorMessage);
+    return;
+  }
+  int c = 0;
+  print(recommendations.startMessage);
+  for (var recommendation in recommendations.recommendations!) {
+    print(recommendation.name);
+    print(recommendation.address);
+    print(recommendation.description);
+    print(recommendation.openingHours);
+    print(recommendation.rating);
+    print(recommendation.phoneNumber);
+    print(recommendations.recomendationPhotos!.placePhotoUriCollection[c]
+        ['uri_collection'][0]); //gets the first photo uri for the place
+  }
+  print(recommendations.closingMessage);
+}
+
+```
