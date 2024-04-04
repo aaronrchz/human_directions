@@ -7,3 +7,5 @@
     Changed system message to change the format of the output from human directions. 
     Added class to manage the human directions, result.
     Added Examples to README.md
+    Corrected typos
+    Added lacking documentations
