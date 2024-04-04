@@ -1,11 +1,11 @@
 # ciphy: human_directios v0
 
-Human directions is a package that tries to improve the instructions given by a GPS navigation system, using AI to re-organize said instructions to a more familiar vocabulary, understandable to almost anyone.
+Human directions is a package that tries to **improve the instructions given by a GPS navigation system, using AI to re-organize said instructions to a more familiar vocabulary**, understandable to almost anyone.
 
 ## Requirements
 
 ### Api keys 
-This package needs two api keys to work, a Google cloud API key (enabled for directions API and places(new) API) and a OpenAI API key
+This package needs **two api keys to work**, a Google cloud API key (enabled for directions API and places(new) API) and a OpenAI API key
 
 ### Dependencies.
 
@@ -21,33 +21,91 @@ http:  ^1.1.0
 
 
 ## Usage
-This project is built in flutter and dart.
-|
-For the moment, this project is aimed to be on a mobile device, hence the main file structures the output in a screen in which all the data output is shown in a simple way.
 
-to get the directions, after building the object of class HumanDirections (Which requires two api keys, GoogleDirections and openAI), it is needed to call the method fetchHumanDirections giving the origin and destination as arguments. Then you can access the data output through the members of the object class HumanDirections. But the main member is called humanDirectionsResult which contains the chatgpt output as a string.
-
-### Features
-There are two main features on this package:
-The humanization of directions: the humanization is as described above, based on and origin and destination, the package outputs the directions, (the user can use its geolocation as the origin).
-
-The recommendation of places: given an input as "where can i get a drink?" using the google_places API the AI will choose a set of places to recommend the user.
-
-As for the showcase app, the recommendations output can be used to get the directions.
-
-### Example App
-Using the app provided (in example/showcase/app), it is possible to test the package just using the UI by providing an origin and destination in the corresponding text fields.
-The preferred format for the inputs would be as full address, for example Champ de Mars, 5 Av. Anatole France, 75007 Paris, France (the Eiffel Tower address), however it also works with geo-coords, and partial addresses, however in the last case the results could be unexpected as the Google directions API will have to guess the missing parts.
-
-#### How to use
-
-First of all, it is needed to add the next line to the file 'AndroidManifest.xml'
+**First of all, it is needed to add the next line to the file 'AndroidManifest.xml'**
 
 ```
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```
 
-Then the example can be accessed as fallows
+This project is built in** flutter and dart**.
+
+to get the directions, after building the object of class ```HumanDirections``` (**Which requires two api keys, GoogleDirections and openAI**), it is needed to call the method fetchHumanDirections giving the origin and destination as arguments. Then you can access the data output through the members of the object class HumanDirections. But the main member is called ```humanDirectionsResult``` which contains the chatgpt output as a ```string```.
+
+### HumanDirections class
+
+Main class for the human directions package.
+
+**This class provides functionality for fetching human directions based on specified origin and destination, as well as handling nearby places recommendations and current location retrieval**.
+
+#### Parameters:
+
+##### Required:
+
+- **openAiApiKey**: (```String```) OpenAI API key to access the AI model.
+
+- **googleDirectionsApiKey**: (```String```) Google Cloud key with access to Directions and Places (new) API to fetch directions and places recommendations.
+
+##### Optional:
+
+- **googlelanguage**: (```String, Default value: 'en'```) the chosen language code for the Google Directions output you can find all the languages at https://developers.google.com/maps/faq#languagesupport **However, it is strongly recommended to keep the language as English, as this does not affect 'human directions' and all the system messages for the AI are in English**
+    
+- **unitSystem**: (```google_direction_api package UnitSystem, Default value: UnitSystem.metric```) the unit system used for Direction API to measure the distances and to give the instructions.
+    
+- **openAIlanguage**: (```String, Default value: OpenAILanguage.en```) the language in which the AI will communicate with the user there's a class that's part of this package that contains all the supported languages to March 13, 2024: ```package:human_directions/components/llm/supported_languages.dart```
+
+- **placesRadius**: (```double, Default value: 50.0```) this value represents the dimension of the radius to fetch places for the directions, as they are used to better give better references for each step, this does not affect the recommendations, as that radius is chosen by the AI
+
+- **gptModel**: (```String, Default value: OpenAiModelsNames.gpt4```) this is the name of the used AI model, there's a class that contains all the model names up to March 13, 2024: ```package:human_directions/components/llm/models.dart``` however, as for previous tests, GPT-4 is considered to be the best fit.
+   
+- **gptModelTemperature**: (```double, Default value: 0.4```) temperature is a number between 0 and 2, when set higher the outputs will be more random and possibly imprecise, closer to 0 the outputs will be more deterministic
+
+#### Output Data:
+
+- **resolvedDistance**: (```Distance```) The calculated distance between origin and destination after executing the methods fetchHumanDirections or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
+
+- **resolvedTime**: (```Time```): The calculated estimated time to go between origin and destination after executing the methods fetchHumanDirections or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
+
+- **steps**: (```List<Step> type from package:google_directions_api```) a list with each instruction step given by Direction API.
+  
+- **requestResult**: (```String,  Default value 'awaiting'```) the result from the request to Directions API.
+
+- **humanDirectionsResult**: (```String?```) the string resulting from fetchHumanDirections or fetchHumanDirectionsFromLocation, this is a JSON Map with the next format:
+ ```
+{
+  "start_message": "any message to give context for the user before giving the instructions",
+  "steps": "a list with each converted instruction as a map" [{
+      "number": "the number of the instruction", //int
+      "instruction": "the converted instruction",
+    }],
+  "end_message": "any context closing message for the user"
+}
+ ```
+- **nearbyPlacesFrom**: (```List<String>```) the collection of nearby places relative to the start location of each step from direction API.
+
+- **nearbyPlacesTo**: (```List<String>```) the collection of nearby places relative to the end location of each step from direction API.
+
+- **currentPosition**: (```GeoCoord type from package:google_directions_api```): the user's current position, value null until the execution of getCurrentLocation, fetchHumanDirectionsFromLocation or fetchHumanDirections.
+
+- **lastException**: (```String?```) last exception given from any called method from this class.
+
+### Features
+There are two main features on this package:
+**The humanization of directions**: the humanization is as described above, based on and origin and destination, the package outputs the directions, (the user can use its geolocation as the origin).
+
+**The recommendation of places**: given an input as "where can i get a drink?" using the google_places API the AI will choose a set of places to recommend the user.
+
+As for the **showcase app**, the recommendations output can be used to get the directions.
+
+### Example App
+Using the **app provided** (in ```package:human_directions/example/showcase/app```), it is possible to **test the package** just using the UI by providing an origin and destination in the corresponding text fields.
+The **preferred** format for the inputs would be as **full address**, for example Champ de Mars, 5 Av. Anatole France, 75007 Paris, France (the Eiffel Tower address), however it **also works** with **geo-coords**, and partial addresses, however in the last case the results could be unexpected as the Google directions API will have to guess the missing parts.
+
+### Independet Examples
+
+#### Showcase app
+
+The example app can be accessed as fallows
 
 
 ```
@@ -65,7 +123,7 @@ void main() {
 }
 
 ```
-### Independet Examples
+
 
 #### Get Origin-Destination based Directions
 
@@ -100,7 +158,7 @@ void getHumanDirectionsExample() async {
     {
       "start_message": "any message to give context for the user before giving the instructions",
       "steps":"a list with each converted instruction as a map"[{
-        "number": "the number odf the instruction", //int
+        "number": "the number of the instruction", //int
         "instruction": "the converted instruction",
       }],
       "end_message": "any context closing message for the user"
@@ -150,7 +208,7 @@ void getHumanDirectionsFromLocationExample(BuildContext context) async {
     {
       "start_message": "any message to give context for the user before giving the instructions",
       "steps":"a list with each converted instruction as a map"[{
-        "number": "the number odf the instruction", //int
+        "number": "the number of the instruction", //int
         "instruction": "the converted instruction",
       }],
       "end_message": "any context closing message for the user"

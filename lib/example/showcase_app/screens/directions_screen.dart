@@ -44,7 +44,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
       googleDirectionsApiKey: widget.googleDirectionsApiKey,
       openAIlanguage: OpenAILanguage.en,
       googlelanguage: 'en',
-      placesRadious: 50,
+      placesRadius: 50,
     );
     _originFieldController.text = '34 Bd Garibaldi, 75015 Paris, Francia';
     _destinationFieldController.text =
@@ -85,12 +85,12 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
               'Error on directions_api ${directions.directionsRequestResult}');
           timer.cancel();
         }
-        if (directions.humanDirectionsFlag > 1) {
+        if (directions.fetchHumanDirectionsFlag > 1) {
           humanDirectionsWidget = ErrorOnRequestWidget(
               directions.updateFetchHumanDirections ?? 'Unknown error');
           timer.cancel();
         }
-        if (directions.humanDirectionsFlag == 0) {
+        if (directions.fetchHumanDirectionsFlag == 0) {
           humanDirectionsWidget = HumanStepsWidget(
               stringHumanDirections:
                   directions.updateFetchHumanDirections ?? 'ERROR');
