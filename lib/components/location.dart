@@ -2,9 +2,23 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_directions_api/google_directions_api.dart';
 
+/// Controller class for geolocation has one method
+///   - getLocation: its just to get the user location in a variable type  GeoCoord from package:google_directions_api
 class GeoLocatorHandler {
+  ///Any error message trwon by the class methos
   String? errorMessage;
+
+  /// Last stored coord of the user
   GeoCoord? lastKnownPosition;
+
+  /// Main method to get he location of the user.
+  ///
+  /// Parameters:
+  ///   - context (BuildContext):  the build context is required to ask the user permission to use their location.
+  ///
+  /// Returns:
+  ///   - null if theres an error, (sotred in errorMessage variable).
+  ///   - GeoCooord if the request weas successful.
   Future<GeoCoord?> getLocation(BuildContext context) async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -26,6 +40,7 @@ class GeoLocatorHandler {
     return GeoCoord(position.latitude, position.longitude);
   }
 
+  /// Method to get the user perrmission for the location, internal use.
   Future<void> _askLocationPermisionDialog(BuildContext context) {
     BuildContext localContext = context;
     return showDialog<void>(

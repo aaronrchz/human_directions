@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:http/http.dart' as http;
-import 'package:human_directios/components/places/places_types.dart';
+import 'places_types.dart';
 
+/// The controller that manages all the use of places API
 class PlacesController {
   String placesSummary = '';
   int summaryFlag = 0;
@@ -29,7 +30,7 @@ class PlacesController {
         }
       }
     };
-    if (types.contains(PlaceType.any)) {
+    if (!types.contains(PlaceType.any)) {
       requestBodyPrototype['includedTypes'] = types;
     }
     final requestBody = jsonEncode(requestBodyPrototype);
@@ -102,7 +103,7 @@ class PlacesController {
     }
     for (var element in places) {
       summary =
-          '$summary${element['displayName']['text']}(${element['types']}), ';
+          '$summary${element['displayName']['text']}(${element['types'][0]}, ${element['types'][1]}), ';
     }
     return summary;
   }
@@ -126,7 +127,6 @@ class PlacesController {
     }
   }
 
-/*Work in progress */
   Future<List<dynamic>> fetchPlacePhotosData(String place) async {
     String uri = 'https://places.googleapis.com/v1/places/$place';
     Map<String, String> headers = {
