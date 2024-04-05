@@ -17,16 +17,17 @@ import 'components/llm/recomendations_parse.dart';
 /// as well as handling nearby places recommendations and current location retrieval.
 ///
 /// Parameters:
-///   Required:
+///   - Required:
 ///     - openAiApiKey: (String) OpenAI API key to access the AI model.
 ///     - googleDirectionsApiKey: (String) Google Cloud key with access to Directions and Places (new) API to fetch directions
 ///           and places recommendations.
-///   Optional:
+///   - Optional:
 ///     - googlelanguage: (String, Default value: 'en') the chosen language code for the Google Directions output
 ///            you can find all the languages at https://developers.google.com/maps/faq#languagesupport However, it is strongly
 ///            recommended to keep the language as English, as this does not affect 'human directions' and all the system messages for the AI are in English
 ///     - unitSystem: (google_direction_api package UnitSystem, Default value: UnitSystem.metric) the unit system used for
 ///             Direction API to measure the distances and to give the instructions.
+///     - travelMode: (google_direction_api package TravelMode, Default value: TravelMode.walking): The used travel mode to get directions.
 ///     - openAIlanguage: (String, Default value: OpenAILanguage.en) the language in which the AI will communicate with the user
 ///             there's a class that's part of this package that contains all the supported languages to March 13, 2024:
 ///             package:human_directions/components/llm/supported_languages.dart
@@ -89,6 +90,7 @@ class HumanDirections {
   double gptModelTemperature;
   final HumanDirectionsLLMSystenMessages _systenMessages;
 
+/*constructor*/
   HumanDirections(
       {required this.openAiApiKey,
       required this.googleDirectionsApiKey,
@@ -197,6 +199,7 @@ class HumanDirections {
         .timeout(const Duration(minutes: 2));
   }
 
+  /// Primary method to fetxh directions, internal use.
   Future<int> _fetchDirections(String origin, String destination) async {
     DirectionsService directionsService = DirectionsService();
     DirectionsService.init(googleDirectionsApiKey);
@@ -226,6 +229,7 @@ class HumanDirections {
     return _resultFlag;
   }
 
+  /// The method used to give the directions to chatgpt and fetch human directions, internal use
   Future<void> _gptPrompt(String prompt) async {
     OpenAI.apiKey = openAiApiKey;
     final systemMessage = _systenMessages.humanDirectionsSysMsg;
@@ -258,6 +262,7 @@ class HumanDirections {
     }
   }
 
+  /// Full method to fetch recommendations for nearby places, internal use.
   Future<NearbyPlacesRecomendationsObject> _gptPromptNearbyPlaces(
       String prompt, GeoCoord location) async {
     try {
@@ -365,6 +370,7 @@ class HumanDirections {
     }
   }
 
+  /// Builds a string containing all the nearrby places and puts them into the corresponding list, internal use.
   Future<void> _getAllNearbyPlaces() async {
     for (int i = 0; i < (steps?.length ?? 0); i++) {
       nearbyPlacesFrom.add(
@@ -377,6 +383,7 @@ class HumanDirections {
     }
   }
 
+  /// Builds one string with all the info needed by the AI and then makes the post request, internal use.
   Future<void> _buildAndPost() async {
     await _getAllNearbyPlaces();
     for (int i = 0; i < (steps?.length ?? 0); i++) {
@@ -389,11 +396,13 @@ class HumanDirections {
   }
 }
 
+/// Distance representation class
 class Distance {
   String? text;
   num? value;
 }
 
+/// Time representation classs
 class Time {
   String? text;
   num? value;

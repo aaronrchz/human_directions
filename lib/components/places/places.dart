@@ -3,6 +3,7 @@ import 'package:google_directions_api/google_directions_api.dart';
 import 'package:http/http.dart' as http;
 import 'places_types.dart';
 
+/// The controller that manages all the use of places API
 class PlacesController {
   String placesSummary = '';
   int summaryFlag = 0;
@@ -126,7 +127,6 @@ class PlacesController {
     }
   }
 
-/*Work in progress */
   Future<List<dynamic>> fetchPlacePhotosData(String place) async {
     String uri = 'https://places.googleapis.com/v1/places/$place';
     Map<String, String> headers = {
