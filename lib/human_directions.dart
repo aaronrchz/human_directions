@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart' hide Step;
@@ -211,8 +212,11 @@ class HumanDirections {
         unitSystem: unitSystem,
         language: googlelanguage);
 
-    await directionsService.route(request,
-        (DirectionsResult response, DirectionsStatus? status) {
+    // Create a Completer
+    var completer = Completer<int>();
+
+    directionsService.route(request,
+        (DirectionsResult response, DirectionsStatus? status) async {
       if (status == DirectionsStatus.ok) {
         resolvedDistance.text = response.routes![0].legs![0].distance?.text;
         resolvedDistance.value = num.tryParse(resolvedDistance.text!) ?? 0;
@@ -220,13 +224,19 @@ class HumanDirections {
         resolvedTime.value = num.tryParse(resolvedTime.text!) ?? 0;
         steps = response.routes![0].legs![0].steps;
         requestResult = 'OK';
-        _buildAndPost();
+        await _buildAndPost();
+        // Use completer to complete the Future
+        completer.complete(0); // Assuming 0 indicates success
       } else {
         _resultFlag = 2;
         requestResult = 'Error: $status : ${response.errorMessage}';
+        // Use completer to complete the Future with an error state
+        completer.complete(_resultFlag);
       }
     });
-    return _resultFlag;
+
+    // Return the Future controlled by the Completer
+    return completer.future;
   }
 
   /// The method used to give the directions to chatgpt and fetch human directions, internal use
@@ -391,7 +401,7 @@ class HumanDirections {
           '${i + 1} - From: ${steps?[i].startLocation.toString()} (Nearby Places: ${nearbyPlacesFrom[i]} ),to: ${steps?[i].endLocation.toString()} (Nearby Places: ${nearbyPlacesTo[i]}), Instructions: ${steps?[i].instructions},Distance:${steps?[i].distance?.text}  ,Time:${steps?[i].duration?.text}  , Maneuver: ${steps?[i].maneuver} \n';
       _prompt = _prompt + currentDir;
     }
-    _gptPrompt(_prompt);
+    await _gptPrompt(_prompt);
     _resultFlag = 0;
   }
 }

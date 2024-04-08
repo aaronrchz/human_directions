@@ -24,13 +24,13 @@ http:  ^1.1.0
 
 **First of all, it is needed to add the next line to the file 'AndroidManifest.xml'**
 
-```
+```xml
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 ```
 
 This project is built in** flutter and dart**.
 
-to get the directions, after building the object of class ```HumanDirections``` (**Which requires two api keys, GoogleDirections and openAI**), it is needed to call the method fetchHumanDirections giving the origin and destination as arguments. Then you can access the data output through the members of the object class HumanDirections. But the main member is called ```humanDirectionsResult``` which contains the chatgpt output as a ```string```.
+to get the directions, after building the object of class ```HumanDirections``` (**Which requires two api keys, GoogleDirections and openAI**), it is needed to call the method fetchHumanDirections giving the origin and destination as arguments. Then you can access the data output through the members of the object class HumanDirections. But the main member is called ```humanDirectionsResult``` which contains the chatgpt output as a ```String```.
 
 ### HumanDirections class
 
@@ -110,7 +110,7 @@ The **preferred** format for the inputs would be as **full address**, for exampl
 The example app can be accessed as fallows
 
 
-```
+```dart
 import 'package:flutter/material.dart';
 import 'package:human_directions/example/showcase_app/human_directions_app.dart';
 
@@ -129,7 +129,7 @@ void main() {
 
 #### Get Origin-Destination based Directions
 
-```
+```dart
 /*This is a simplified example of how to use the the human_directions package, however the controller 
 has more parameters that can change the output, such as the lenguage */
 
@@ -181,7 +181,7 @@ void getHumanDirectionsExample() async {
 
 #### Get Current Location to Destination based Directions
 
-```
+```dart
 import 'package:human_directions/human_directions.dart';
 import 'package:human_directions/components/llm/steps_parse.dart';
 
@@ -230,7 +230,7 @@ void getHumanDirectionsFromLocationExample(BuildContext context) async {
 
 #### Get recommendatios for nearby places.
 
-```
+```dart
 import 'package:human_directions/human_directions.dart';
 import 'package:human_directions/components/llm/recomendations_parse.dart';
 
