@@ -73,7 +73,7 @@ Main class for the human directions package.
 - **requestResult**: (```String,  Default value 'awaiting'```) the result from the request to Directions API.
 
 - **humanDirectionsResult**: (```String?```) the string resulting from fetchHumanDirections or fetchHumanDirectionsFromLocation, this is a JSON Map with the next format:
- ```
+ ```json
 {
   "start_message": "any message to give context for the user before giving the instructions",
   "steps": "a list with each converted instruction as a map" [{
