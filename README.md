@@ -265,5 +265,80 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
   }
   print(recommendations.closingMessage);
 }
+```
+
+#### Get Origin-Destination based Directions with Status Messages
+
+```dart
+/*This is a simplified example of how to use the the human_directions package, however the controller 
+has more parameters that can change the output, such as the lenguage */
+/*In this case the same can be done to nearbyRecommendations, just change humanDirectionsProcStatus for recommendationsProcStatus*/
+
+import 'package:human_directions/human_directions.dart';
+import 'package:human_directions/components/llm/steps_parse.dart';
+import 'dart:async';
+
+String lastStatus = '';
+late Timer timer;
+
+void getHumanDirectionsExample() async {
+  const String openAiApiKey = 'YOUR_API_KEY';
+  const String googleDirectionsApiKey = 'YOUR_API_KEY';
+  final HumanDirections controller = HumanDirections(
+      openAiApiKey: openAiApiKey,
+      googleDirectionsApiKey: googleDirectionsApiKey);
+  const String origin = '2220 Louisiana Blvd NE, Albuquerque, NM 87110';
+  //or
+  // const String origin = '35.10306238493775, -106.56850233266698';
+  const String destination = '601 Eubank Blvd SE, Albuquerque, NM 87123';
+  //or
+  // const String destination = '35.066128531595254, -106.533857392472'
+  StreamController<String> streamController = StreamController<String>();
+  getStatusMessageFromHumanDirections(streamController, controller);
+
+  streamController.stream.listen((data) {
+    print('New Status:- $data');
+  });
+
+  int directionsFlag =
+      await controller.fetchHumanDirections(origin, destination);
+  if (directionsFlag == 0) {
+    print(controller
+        .directionsStepsList); //contains a list with all the googleDirections Api Steps (and placesApi nearby places for each step)
+    print(controller
+        .humanDirectionsResult); //this contains a string that's formatted as a map
+    /*Map format:
+    {
+      "start_message": "any message to give context for the user before giving the instructions",
+      "steps":"a list with each converted instruction as a map"[{
+        "number": "the number of the instruction", //int
+        "instruction": "the converted instruction",
+      }],
+      "end_message": "any context closing message for the user"
+    } 
+    the package contains a parse class that can decode the result to a more usable object*/
+    HumanDirectionsOutput output =
+        HumanDirectionsOutput.fromString(controller.humanDirectionsResult!);
+    print(output.startMessage);
+    for (var step in output.steps) {
+      print('${step.number} - ${step.instruction}');
+    }
+    print(output.endMessage);
+  }
+   Future.delayed(const Duration(seconds: 2), () {
+      timer.cancel();
+    });
+}
+
+void getStatusMessageFromHumanDirections(
+    StreamController<String> streamController, HumanDirections controller) {
+  timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    if (controller.humanDirectionsProcStatus != lastStatus) {
+      lastStatus = controller.humanDirectionsProcStatus;
+      streamController.add(controller.humanDirectionsProcStatus);
+    }
+  });
+}
+
 
 ```

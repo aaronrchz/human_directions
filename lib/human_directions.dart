@@ -90,6 +90,9 @@ class HumanDirections {
   String gptModel;
   double gptModelTemperature;
   final HumanDirectionsLLMSystenMessages _systenMessages;
+  /*Trackers*/
+  String _humanDirectionsProcStatus = 'Not Started';
+  String _recommendationsProcStatus = 'Not Started';
 
 /*constructor*/
   HumanDirections(
@@ -112,6 +115,8 @@ class HumanDirections {
   int get fetchResultFlag => _resultFlag;
   int get fetchHumanDirectionsFlag => _humanDirectionsFlag;
   String? get updateFetchHumanDirections => humanDirectionsResult;
+  String get humanDirectionsProcStatus => _humanDirectionsProcStatus;
+  String get recommendationsProcStatus => _recommendationsProcStatus;
   /*Methods */
 
   ///Fetches human directions based on an specified origin and destination
@@ -123,9 +128,11 @@ class HumanDirections {
   /// Returns:
   ///   -0 if the directions were fetched successfully, 1 if an exception occurred.
   Future<int> fetchHumanDirections(String origin, String destination) async {
+    _humanDirectionsProcStatus = 'Started';
     if ((origin.length < 20 || origin.isEmpty) ||
         (destination.length < 20 || destination.isEmpty)) {
       lastException = "The origin or destination is empty or is too short";
+      _humanDirectionsProcStatus = 'Error';
       throw lastException!;
     }
     try {
@@ -151,19 +158,24 @@ class HumanDirections {
   ///   -0 if the directions were fetched successfully, 1 if an exception occurred.
   Future<int> fetchHumanDirectionsFromLocation(
       String destination, BuildContext context) async {
+    _humanDirectionsProcStatus = 'Started';
     if (destination.length < 20 || destination.isEmpty) {
       lastException = "The destination is empty or is too short";
+      _humanDirectionsProcStatus = 'Error';
       throw lastException!;
     }
     try {
       if (currentPosition == null) {
+        _humanDirectionsProcStatus = 'Getting current location';
         await getCurrentLocation(context);
+        _humanDirectionsProcStatus = 'Getting current location successful';
       }
       await _fetchDirections(
           '${currentPosition?.latitude},${currentPosition?.longitude}',
           destination);
       return 0;
     } on Exception catch (e) {
+      _humanDirectionsProcStatus = 'Error fetching directions';
       lastException = e.toString();
       return 1;
     }
@@ -195,6 +207,7 @@ class HumanDirections {
   ///              its necessary as the Geolocation API needs to ask for permission to get the location
   Future<NearbyPlacesRecomendationsObject> getNearbyRecommendations(
       String prompt, BuildContext context) async {
+    _recommendationsProcStatus = 'Started';
     await getCurrentLocation(context);
     return await _gptPromptNearbyPlaces(prompt, currentPosition!)
         .timeout(const Duration(minutes: 2));
@@ -204,7 +217,7 @@ class HumanDirections {
   Future<int> _fetchDirections(String origin, String destination) async {
     DirectionsService directionsService = DirectionsService();
     DirectionsService.init(googleDirectionsApiKey);
-
+    _humanDirectionsProcStatus = 'Fetching Directions from Google API';
     final request = DirectionsRequest(
         origin: origin,
         destination: destination,
@@ -223,8 +236,8 @@ class HumanDirections {
         resolvedTime.text = response.routes![0].legs![0].duration?.text;
         resolvedTime.value = num.tryParse(resolvedTime.text!) ?? 0;
         steps = response.routes![0].legs![0].steps;
-        requestResult = 'OK';
         await _buildAndPost();
+        requestResult = 'OK';
         // Use completer to complete the Future
         completer.complete(0); // Assuming 0 indicates success
       } else {
@@ -241,6 +254,7 @@ class HumanDirections {
 
   /// The method used to give the directions to chatgpt and fetch human directions, internal use
   Future<void> _gptPrompt(String prompt) async {
+    _humanDirectionsProcStatus = 'Fetching Human Directions from LLM';
     OpenAI.apiKey = openAiApiKey;
     final systemMessage = _systenMessages.humanDirectionsSysMsg;
 
@@ -266,7 +280,10 @@ class HumanDirections {
       humanDirectionsResult = chat.choices[0].message.content?[0].text;
 
       _humanDirectionsFlag = 0;
+      _humanDirectionsProcStatus =
+          'Fetching Human Directions from LLM successful';
     } catch (e) {
+      _humanDirectionsProcStatus = 'Error fetching Human Directions from LLM';
       humanDirectionsResult = 'Exception: $e';
       _humanDirectionsFlag = 2;
     }
@@ -291,6 +308,7 @@ class HumanDirections {
       final requestMessages = [systemMessage, userMessage];
 
       final tools = HumanDirectionsLLMTools.recommendationTool;
+      _recommendationsProcStatus = 'Sending prompt to LLM';
       final chat = await OpenAI.instance.chat.create(
         model: gptModel,
         messages: requestMessages,
@@ -299,6 +317,8 @@ class HumanDirections {
       ).timeout(const Duration(seconds: 40));
       final message = chat.choices.first.message;
       if (message.haveToolCalls) {
+        _recommendationsProcStatus =
+            'LLM response received, processing tool request';
         final call = message.toolCalls!.first;
         if (call.function.name ==
             HumanDirectionsLLMTools.recommendationTool.function.name) {
@@ -309,7 +329,7 @@ class HumanDirections {
           final categories = List<String>.from(
               decodedArgs[RecommendationToolArgs.categories.name]);
           final radius = decodedArgs[RecommendationToolArgs.radius.name];
-
+          _recommendationsProcStatus = 'Fetching nearby places';
           final result = await nearbyplacesController
               .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,
                   types: categories)
@@ -334,7 +354,7 @@ class HumanDirections {
         tools: [tools],
         temperature: gptModelTemperature,
       );
-
+      _recommendationsProcStatus = 'Fetching recommendations';
       final List<OpenAIStreamChatCompletionModel> completions =
           await secondChat.toList().timeout(const Duration(minutes: 1));
 
@@ -345,6 +365,7 @@ class HumanDirections {
         secondResponseMessage += (content?[0]?.text ?? '');
       }
       if (secondResponseMessage.length > 10) {
+        _recommendationsProcStatus = 'Parsing LLM response';
         final output =
             NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
         final List<Map<String, dynamic>> photosRep = [];
@@ -356,12 +377,16 @@ class HumanDirections {
         }
         final List<List<dynamic>> photosId = [];
         for (var element in output.recommendations!) {
+          _recommendationsProcStatus =
+              'Fetching photos ids for each recommendation';
           photosId.add(await nearbyplacesController
               .fetchPlacePhotosData(element.id)
               .timeout(const Duration(seconds: 40)));
         }
         int i = 0;
         for (var element in photosId) {
+          _recommendationsProcStatus =
+              'Fetching photos uris for each recommendation';
           photosRep[i]['uri_collection'] = await nearbyplacesController
               .fetchPhotosUrl(element,
                   width: 400, height: 400, maxOperations: 1)
@@ -370,18 +395,22 @@ class HumanDirections {
         }
         output.recomendationPhotos =
             PhotoCollection(placePhotoUriCollection: photosRep);
+        _recommendationsProcStatus = 'Finished successfully';
         return output;
       } else {
+        _recommendationsProcStatus = 'Error';
         return NearbyPlacesRecomendationsObject.fromError(
             Exception('LLM response is empty'));
       }
     } catch (e) {
+      _recommendationsProcStatus = 'Error';
       return NearbyPlacesRecomendationsObject.fromError(e);
     }
   }
 
   /// Builds a string containing all the nearrby places and puts them into the corresponding list, internal use.
   Future<void> _getAllNearbyPlaces() async {
+    _humanDirectionsProcStatus = 'Fetching Nearby Places for each step';
     for (int i = 0; i < (steps?.length ?? 0); i++) {
       nearbyPlacesFrom.add(
           await nearbyplacesController.fetchAndSummarizeNearbyPlaces(
@@ -391,10 +420,14 @@ class HumanDirections {
       nearbyPlacesTo.add(await nearbyplacesController
           .fetchAndSummarizeNearbyPlaces(steps?[i].endLocation, placesRadius));
     }
+    _humanDirectionsProcStatus =
+        'Fetching Nearby Places for ech step successful';
   }
 
   /// Builds one string with all the info needed by the AI and then makes the post request, internal use.
   Future<void> _buildAndPost() async {
+    _humanDirectionsProcStatus =
+        'Fetching Directions from Google API successful';
     await _getAllNearbyPlaces();
     for (int i = 0; i < (steps?.length ?? 0); i++) {
       String currentDir =
