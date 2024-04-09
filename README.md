@@ -1,4 +1,4 @@
-# ciphy: human_directios v0
+# ciphy: human_directions v0
 
 Human directions is a package that tries to **improve the instructions given by a GPS navigation system, using AI to re-organize said instructions to a more familiar vocabulary**, understandable to almost anyone.
 
@@ -77,7 +77,7 @@ Main class for the human directions package.
 {
   "start_message": "any message to give context for the user before giving the instructions",
   "steps": "a list with each converted instruction as a map" [{
-      "number": "the number of the instruction", //int
+      "number": "the number of the instruction", 
       "instruction": "the converted instruction",
     }],
   "end_message": "any context closing message for the user"
@@ -228,7 +228,7 @@ void getHumanDirectionsFromLocationExample(BuildContext context) async {
 
 ```
 
-#### Get recommendatios for nearby places.
+#### Get recommendations for nearby places.
 
 ```dart
 import 'package:human_directions/human_directions.dart';
@@ -267,7 +267,7 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
 }
 ```
 
-#### Get Origin-Destination based Directions with Status Messages
+#### Get Origin-Destination based Directions with status messages
 
 ```dart
 /*This is a simplified example of how to use the the human_directions package, however the controller 
