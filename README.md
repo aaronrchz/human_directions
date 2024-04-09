@@ -70,7 +70,7 @@ Main class for the human directions package.
 
 - **steps**: (```List<Step> type from package:google_directions_api```) a list with each instruction step given by Direction API.
   
-- **requestResult**: (```String,  Default value 'awaiting'```) the result from the request to Directions API.
+- **directionsAPIRequestResultStatus**: (```String,  Default value 'awaiting'```) the result from the request to Directions API.
 
 - **humanDirectionsResult**: (```String?```) the string resulting from fetchHumanDirections or fetchHumanDirectionsFromLocation, this is a JSON Map with the next format:
  ```json

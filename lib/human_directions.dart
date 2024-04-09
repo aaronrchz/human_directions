@@ -47,7 +47,7 @@ import 'components/llm/recomendations_parse.dart';
 ///   - resolvedTime: (Time): The calculated estimated time to go between origin and destination after executing the methods fetchHumanDirections
 ///             or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
 ///   - steps: (List<Step> type from package:google_directions_api) a list with each instruction step given by Direction API.
-///   - requestResult: (String, Default value 'awaiting') the result from the request to Directions API.
+///   - directionsAPIRequestResultStatus: (String, Default value 'awaiting') the result from the request to Directions API.
 ///   - humanDirectionsResult: (String?) the string resulting from fetchHumanDirections or fetchHumanDirectionsFromLocation
 ///            - this is a JSON Map with the next format:
 ///               {
@@ -63,25 +63,53 @@ import 'components/llm/recomendations_parse.dart';
 ///   - currentPosition: (GeoCoord type from package:google_directions_api): the user's current position, value null until the execution of
 ///             getCurrentLocation, fetchHumanDirectionsFromLocation or fetchHumanDirections.
 ///   - lastException: (String?) last exception given from any called method from this class.
+///
+/// Getters:
+///   - directionsStepsList: (List<Step>?) Redundant returns [steps]
+///   - directionsRequestResult: (String) Redundant returns [directionsAPIRequestResultStatus] that's the result from the request to Directions API.
+///   - fetchResultFlag: (int)  returns [_resultFlag] that's the flag that indicates the result of the request to Directions API.
+///   - fetchHumanDirectionsFlag: (int)  returns [_humanDirectionsFlag] that's the flag that indicates the result of the request to fetch human directions.
+///   - updateFetchHumanDirections: (String?) Redundant returns [humanDirectionsResult] that's the result of the request to fetch human directions.
+///   - humanDirectionsProcStatus: (String) Returns the current status of the human directions process.
+///   - recommendationsProcStatus: (String) Returns the current status of the recommendations process.
 class HumanDirections {
   /* flags */
   int _resultFlag = 1;
   int _humanDirectionsFlag = 1;
   /*Output Data */
+  /// The calculated distance between origin and destination after executing the methods fetchHumanDirections
+  /// or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
   Distance resolvedDistance = Distance();
+
+  /// The calculated estimated time to go between origin and destination after executing the methods fetchHumanDirections
+  /// or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
   Time resolvedTime = Time();
+
+  ///A list with each instruction step given by Direction API.
   List<Step>? steps = [];
-  String requestResult = 'awaiting';
+
+  /// The result Status from the request to Directions API.
+  String directionsAPIRequestResultStatus = 'awaiting';
+
+  /// The result of the request to fetch human directions.
   String? humanDirectionsResult = '';
-  PlacesController nearbyplacesController;
+
+  /// The collection of nearby places relative to the start location of each step from direction API.
   List<String> nearbyPlacesFrom = [];
+
+  /// The collection of nearby places relative to the end location of each step from direction API.
   List<String> nearbyPlacesTo = [];
+
+  /// The user's current position, value null until the execution of getCurrentLocation, fetchHumanDirectionsFromLocation or fetchHumanDirections.
   GeoCoord? currentPosition;
+
+  /// The last exception given from any called method from this class.
   String? lastException;
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
   String openAIlanguage;
+  final PlacesController _nearbyplacesController;
   String _prompt = '\n';
   String googlelanguage;
   UnitSystem unitSystem;
@@ -105,13 +133,13 @@ class HumanDirections {
       this.placesRadius = 50.0,
       this.gptModel = OpenAiModelsNames.gpt4,
       this.gptModelTemperature = 0.4})
-      : nearbyplacesController =
+      : _nearbyplacesController =
             PlacesController(placesApiKey: googleDirectionsApiKey),
         _systenMessages =
             HumanDirectionsLLMSystenMessages(openAIlanguage: openAIlanguage);
   /* getters */
   List<Step>? get directionsStepsList => steps;
-  String get directionsRequestResult => requestResult;
+  String get directionsRequestResult => directionsAPIRequestResultStatus;
   int get fetchResultFlag => _resultFlag;
   int get fetchHumanDirectionsFlag => _humanDirectionsFlag;
   String? get updateFetchHumanDirections => humanDirectionsResult;
@@ -237,12 +265,13 @@ class HumanDirections {
         resolvedTime.value = num.tryParse(resolvedTime.text!) ?? 0;
         steps = response.routes![0].legs![0].steps;
         await _buildAndPost();
-        requestResult = 'OK';
+        directionsAPIRequestResultStatus = 'OK';
         // Use completer to complete the Future
         completer.complete(0); // Assuming 0 indicates success
       } else {
         _resultFlag = 2;
-        requestResult = 'Error: $status : ${response.errorMessage}';
+        directionsAPIRequestResultStatus =
+            'Error: $status : ${response.errorMessage}';
         // Use completer to complete the Future with an error state
         completer.complete(_resultFlag);
       }
@@ -330,7 +359,7 @@ class HumanDirections {
               decodedArgs[RecommendationToolArgs.categories.name]);
           final radius = decodedArgs[RecommendationToolArgs.radius.name];
           _recommendationsProcStatus = 'Fetching nearby places';
-          final result = await nearbyplacesController
+          final result = await _nearbyplacesController
               .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,
                   types: categories)
               .timeout(const Duration(seconds: 40));
@@ -379,7 +408,7 @@ class HumanDirections {
         for (var element in output.recommendations!) {
           _recommendationsProcStatus =
               'Fetching photos ids for each recommendation';
-          photosId.add(await nearbyplacesController
+          photosId.add(await _nearbyplacesController
               .fetchPlacePhotosData(element.id)
               .timeout(const Duration(seconds: 40)));
         }
@@ -387,7 +416,7 @@ class HumanDirections {
         for (var element in photosId) {
           _recommendationsProcStatus =
               'Fetching photos uris for each recommendation';
-          photosRep[i]['uri_collection'] = await nearbyplacesController
+          photosRep[i]['uri_collection'] = await _nearbyplacesController
               .fetchPhotosUrl(element,
                   width: 400, height: 400, maxOperations: 1)
               .timeout(const Duration(seconds: 40));
@@ -413,11 +442,11 @@ class HumanDirections {
     _humanDirectionsProcStatus = 'Fetching Nearby Places for each step';
     for (int i = 0; i < (steps?.length ?? 0); i++) {
       nearbyPlacesFrom.add(
-          await nearbyplacesController.fetchAndSummarizeNearbyPlaces(
+          await _nearbyplacesController.fetchAndSummarizeNearbyPlaces(
               steps?[i].startLocation, placesRadius));
     }
     for (int i = 0; i < (steps?.length ?? 0); i++) {
-      nearbyPlacesTo.add(await nearbyplacesController
+      nearbyPlacesTo.add(await _nearbyplacesController
           .fetchAndSummarizeNearbyPlaces(steps?[i].endLocation, placesRadius));
     }
     _humanDirectionsProcStatus =

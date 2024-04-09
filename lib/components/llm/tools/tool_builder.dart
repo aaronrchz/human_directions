@@ -1,6 +1,7 @@
 import 'package:dart_openai/dart_openai.dart';
 import '../tools/arguments.dart';
 
+/// This class holds the method to build a usable tool for the LLM returning an object compatible with the package dart_openai.
 class ToolBuilder {
   final ToolComponents components;
 

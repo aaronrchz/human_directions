@@ -4,6 +4,7 @@ import 'arguments.dart';
 import 'tool_builder.dart';
 import '../../places/places_types.dart';
 
+/// This class holds the tool to fetch the nearby places used by the LLM to give recommendations.
 class HumanDirectionsLLMTools {
   static OpenAIToolModel recommendationTool =
       ToolBuilder(components: _recommendationToolComponents).buildTool();
@@ -14,6 +15,7 @@ ToolHeader _recommendationToolHeaders = ToolHeader(
     name: 'fetchNearbyPlaces',
     description: 'obtain nearby places, all parameters are required');
 
+/// this are the arguments for the recommendation tool.
 class RecommendationToolArgs {
   static ToolArg latitude = ToolArg(
       name: 'latitude',

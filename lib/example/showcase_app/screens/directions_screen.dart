@@ -69,7 +69,7 @@ class _DirectionsScreenState extends State<DirectionsScreen> {
     Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (directions.fetchResultFlag == 0) {
-          requestResult = directions.requestResult;
+          requestResult = directions.directionsAPIRequestResultStatus;
           resolvedDistance = directions.resolvedDistance;
           resolvedTime = directions.resolvedTime;
           googleDirectionsStepsWidget = GoogleDirectionsSteps(

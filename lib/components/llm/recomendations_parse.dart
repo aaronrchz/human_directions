@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+///Class that represennts one single place recommendation
 class Recommendation {
   final String id;
   final String name;
@@ -19,6 +20,7 @@ class Recommendation {
     required this.phoneNumber,
   });
 
+  ///Factory method to create a Recommendation object from the json map provided by the LLM.
   factory Recommendation.fromJson(Map<String, dynamic> json) {
     return Recommendation(
       id: json['id'],
@@ -33,11 +35,13 @@ class Recommendation {
   }
 }
 
+///Class that represennts a collection of photos for a given place.
 class PhotoCollection {
   List<Map<String, dynamic>> placePhotoUriCollection;
   PhotoCollection({required this.placePhotoUriCollection});
 }
 
+/// Class that represents the output from the recommendatios of the llm
 class NearbyPlacesRecomendationsObject {
   List<Recommendation>? recommendations;
   PhotoCollection? recomendationPhotos;
@@ -53,6 +57,8 @@ class NearbyPlacesRecomendationsObject {
     required this.errorMessage,
     required this.hasError,
   });
+
+  /// Factory method that parses the raw message from the LLM and returns a NearbyPlacesRecomendationsObject object.
   factory NearbyPlacesRecomendationsObject.fromString(String rawData) {
     Map<String, dynamic> data = jsonDecode(rawData);
 
@@ -66,6 +72,8 @@ class NearbyPlacesRecomendationsObject {
       hasError: false,
     );
   }
+
+  /// Factory Method that builds an output when there is an error.
   factory NearbyPlacesRecomendationsObject.fromError(Object e) {
     return NearbyPlacesRecomendationsObject(
       startMessage: null,

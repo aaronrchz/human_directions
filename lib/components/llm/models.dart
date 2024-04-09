@@ -1,10 +1,12 @@
-
+/// All the availible OpenAi models up to march 13, 2024
 class OpenAiModelsNames {
   static const String gpt4u0125Preview = 'gpt-4-0125-preview';
   static const String gpt4TurboPreview = 'gpt-4-turbo-preview';
   static const String gpt4u1106Preview = 'gpt-4-1106-preview';
   static const String gpt4VisionPreview = 'gpt-4-vision-preview';
   static const String gpt4u1106VisionPreview = 'gpt-4-1106-vision-preview';
+
+  ///Recomended at the moment.-
   static const String gpt4 = 'gpt-4';
   static const String gpt4u0613 = 'gpt-4-0613';
   static const String gpt4u32k = 'gpt-4-32k';

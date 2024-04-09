@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+/// The class that represents one single step from the human directions.
+/// it parses and holds the data from the LLM.
 class HumanDirectionsStep {
   final int number;
   final String instruction;
