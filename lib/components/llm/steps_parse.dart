@@ -14,6 +14,7 @@ class HumanDirectionsStep {
   }
 }
 
+/// This class holds and parses the full output from the LLM.
 class HumanDirectionsOutput {
   final String startMessage;
   final List<HumanDirectionsStep> steps;
@@ -25,6 +26,7 @@ class HumanDirectionsOutput {
     required this.endMessage,
   });
 
+  /// This method parses the raw output from the LLM.
   factory HumanDirectionsOutput.fromString(String rawData) {
     Map<String, dynamic> data = jsonDecode(rawData);
     return HumanDirectionsOutput(

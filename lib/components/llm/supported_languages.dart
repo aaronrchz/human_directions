@@ -1,3 +1,4 @@
+/// All the available languages for the OpenAI API up to march 13 2024.
 class OpenAILanguage {
   static const String es = 'Spanish';
   static const String en = 'English';

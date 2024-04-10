@@ -417,7 +417,7 @@ class HumanDirections {
           _recommendationsProcStatus =
               'Fetching photos uris for each recommendation';
           photosRep[i]['uri_collection'] = await _nearbyplacesController
-              .fetchPhotosUrl(element,
+              .fetchPhotosUris(element,
                   width: 400, height: 400, maxOperations: 1)
               .timeout(const Duration(seconds: 40));
           i++;

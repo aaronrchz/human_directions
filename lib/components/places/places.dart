@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'places_types.dart';
 
 /// The controller that manages all the use of places API
+///
+/// Parameters:
+///   - [placesApiKey](String) The API key of the Google Places API.
 class PlacesController {
   String placesSummary = '';
   int summaryFlag = 0;
@@ -14,6 +17,15 @@ class PlacesController {
 
   PlacesController({required this.placesApiKey});
 
+  /// Gets the raw output from the Google Places API.
+  ///
+  /// Parameters:
+  ///   - [centerCoord](GeoCoord from package: google_directions_api) The center of the search.
+  ///   - [radius](num) The search radius in meters.
+  ///   - [types](List<String>) The types of the places to search for.
+  ///
+  /// Returns:
+  ///   - (List<dynamic>) A list of the places found.
   Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, num radius,
       {List<String> types = defaultTypes}) async {
     String apiKey = placesApiKey;
@@ -59,6 +71,15 @@ class PlacesController {
     }
   }
 
+  /// Gets the simplified output from the Google Places API as a comprehensiuve list of maps.
+  ///
+  /// Parameters:
+  ///   - [centerCoord] (GeoCoord from package: google_directions_api) The center of the search.
+  ///   - [radius] (num) The search radius in meters.
+  ///   - [types] (List<String>) The types of the places to search for.
+  ///
+  /// Returns:
+  ///   - (List<dynamic>) A list of the places found.
   Future<List<dynamic>> simplifyFetchNearbyPlacess(
       GeoCoord centerCoord, num radius,
       {List<String> types = defaultTypes}) async {
@@ -96,6 +117,13 @@ class PlacesController {
     }
   }
 
+  /// Summarizes the nearby places found in a single string.
+  ///
+  /// Parameters:
+  ///   - [places] (List<dynamic>) The places to summarize.
+  ///
+  /// Returns:
+  ///   - (String) A string with the summary of the places.
   String summaryNerbyPlaces(List<dynamic>? places) {
     String summary = '';
     if (places == null || places.isEmpty) {
@@ -108,6 +136,15 @@ class PlacesController {
     return summary;
   }
 
+  /// Fetches and summarizes the nearby places, its a combination of the methods fetchNearbyPlaces and summaryNerbyPlaces.
+  ///
+  /// Parameters:
+  ///   - [centerCoord] (GeoCoord from package: google_directions_api) The center of the search.
+  ///   - [radius] (num) The search radius in meters.
+  ///   - [types] (List<String>) The types of the places to search for.
+  ///
+  /// Returns:
+  ///   - (String) A string with the summary of the places.
   Future<String> fetchAndSummarizeNearbyPlaces(
       GeoCoord? centerCoord, double radius,
       {List<String> types = defaultTypes}) async {
@@ -127,8 +164,15 @@ class PlacesController {
     }
   }
 
-  Future<List<dynamic>> fetchPlacePhotosData(String place) async {
-    String uri = 'https://places.googleapis.com/v1/places/$place';
+  /// This methos fetches the places photos IDs as according to the Google Plces API, you have to get the photo ID of the place before getting the urls
+  ///
+  /// Parameters:
+  ///   - [placeId] (String) The ID of the place to fetch the photos from.
+  ///
+  /// Returns:
+  ///   - (List<dynamic>) A list of the photos found.
+  Future<List<dynamic>> fetchPlacePhotosData(String placeId) async {
+    String uri = 'https://places.googleapis.com/v1/places/$placeId';
     Map<String, String> headers = {
       'ContentType': 'application/json',
       'X-Goog-Api-Key': placesApiKey,
@@ -149,7 +193,17 @@ class PlacesController {
     }
   }
 
-  Future<List<dynamic>> fetchPhotosUrl(List<dynamic> photos,
+  /// This method fetches the photos uris as according to the Google Places API.
+  ///
+  /// Parameters:
+  ///   - [photos] (List<dynamic>) The photos to fetch the urls from, the result from the method fetchPlacePhotosData.
+  ///   - [width] (int) The required width of the photo.
+  ///   - [height] (int) The height of the photo.
+  ///   - [maxOperations] (int) The maximum number of operations to fetch (the number of photos to fetch).
+  ///
+  /// Returns:
+  ///   - (List<dynamic>) A list of the photos uris.
+  Future<List<dynamic>> fetchPhotosUris(List<dynamic> photos,
       {int? width, int? height, int? maxOperations}) async {
     List<dynamic> output = [];
     int opCase = 0;

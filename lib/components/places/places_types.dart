@@ -1,3 +1,5 @@
+/// This class representa a catalog of all the Place Types supported by the Google Places API. up to march 13 2024.
+/// Except for the `any` type, which is a catch-all type, specific used internally by the package.
 class PlaceType {
   static const String any = 'any';
   static const String accounting = 'accounting';
