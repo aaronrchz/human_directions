@@ -1,6 +1,6 @@
 //import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:human_directions/components/distance_metrix.dart';
+import 'package:human_directions/components/distance_matrix.dart';
 //import 'package:human_directions/example/showcase_app/human_directions_app.dart';
 
 void main() async {
