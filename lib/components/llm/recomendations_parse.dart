@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../metrics.dart';
 
 ///Class that represennts one single place recommendation
 class Recommendation {
@@ -9,6 +10,8 @@ class Recommendation {
   final String description;
   final String openingHours;
   final String phoneNumber;
+  Distance distance = Distance(text: 'unknown', value: 0);
+  Time duration = Time(text: 'unknown', value: 0);
 
   Recommendation({
     required this.id,

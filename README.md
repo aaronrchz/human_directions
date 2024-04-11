@@ -243,9 +243,9 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
       openAiApiKey: openAiApiKey,
       googleDirectionsApiKey: googleDirectionsApiKey);
   const String prompt = 'Where can i get a drink?';
-
+  const bool fetchPhotos = false; //set to true if you want to fetch the photos for the places
   NearbyPlacesRecomendationsObject recommendations =
-      await controller.getNearbyRecommendations(prompt, context);
+      await controller.getNearbyRecommendations(prompt, context, fetchPhotos);
 
   if (recommendations.hasError) {
     print(recommendations.errorMessage);
@@ -260,8 +260,10 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
     print(recommendation.openingHours);
     print(recommendation.rating);
     print(recommendation.phoneNumber);
-    print(recommendations.recomendationPhotos!.placePhotoUriCollection[c]
+    if(fetchPhotos) {
+      print(recommendations.recomendationPhotos!.placePhotoUriCollection[c]
         ['uri_collection'][0]); //gets the first photo uri for the place
+    }
   }
   print(recommendations.closingMessage);
 }

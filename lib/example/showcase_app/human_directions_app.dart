@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/directions_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/nearby_directions_screen.dart';
+import 'screens/nearby_recommendations_screen.dart';
 import 'screens/simplified_directions_screen.dart';
 
 class HumanDirectionsApp extends StatefulWidget {

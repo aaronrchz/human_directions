@@ -7,5 +7,8 @@
     Changed system message to change the format of the output from human directions. 
     Added class to manage the human directions, result.
     Added Examples to README.md
-    Corrected typos
+    Corrected typos and some file names
+    Distance matrix component first version finished
+    Implemented distance matrix to nearby recommendations feature.
     Added lacking documentations
+    Added the option to not fetch places photos by default (feature: nearby places recommendations)

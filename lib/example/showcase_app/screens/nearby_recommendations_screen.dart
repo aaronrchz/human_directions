@@ -35,7 +35,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
         openAIlanguage: OpenAILanguage.en);
     String input = _textEditingController.text;
     return await directionsController
-        .getNearbyRecommendations(input, context)
+        .getNearbyRecommendations(input, context, fetchPhotos: true)
         .timeout(const Duration(minutes: 10));
   }
 
@@ -132,6 +132,9 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                                               'Opening hours: ${e.openingHours}'),
                                           Text(
                                               'Phone number: ${e.phoneNumber}'),
+                                          Text('Distance: ${e.distance.text}'),
+                                          Text(
+                                              'Time to get there walking: ${e.duration.text}'),
                                           Image.network(data
                                                       .recomendationPhotos!
                                                       .placePhotoUriCollection[
