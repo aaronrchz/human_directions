@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart' hide Step;
-import 'package:google_directions_api/google_directions_api.dart';
+import 'package:google_directions_api/google_directions_api.dart'
+    hide Distance, Time;
 import 'package:dart_openai/dart_openai.dart';
+import 'package:human_directions/components/metrics.dart';
 import 'components/llm/models.dart';
 import 'components/llm/system_messages.dart';
 import 'components/llm/tools/tools.dart';
@@ -79,11 +81,11 @@ class HumanDirections {
   /*Output Data */
   /// The calculated distance between origin and destination after executing the methods fetchHumanDirections
   /// or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
-  Distance resolvedDistance = Distance();
+  Distance resolvedDistance = Distance(text: 'unknown', value: 0);
 
   /// The calculated estimated time to go between origin and destination after executing the methods fetchHumanDirections
   /// or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
-  Time resolvedTime = Time();
+  Time resolvedTime = Time(text: 'unknown', value: 0);
 
   ///A list with each instruction step given by Direction API.
   List<Step>? steps = [];
@@ -259,10 +261,12 @@ class HumanDirections {
     directionsService.route(request,
         (DirectionsResult response, DirectionsStatus? status) async {
       if (status == DirectionsStatus.ok) {
-        resolvedDistance.text = response.routes![0].legs![0].distance?.text;
-        resolvedDistance.value = num.tryParse(resolvedDistance.text!) ?? 0;
-        resolvedTime.text = response.routes![0].legs![0].duration?.text;
-        resolvedTime.value = num.tryParse(resolvedTime.text!) ?? 0;
+        resolvedDistance.text =
+            response.routes![0].legs![0].distance?.text ?? 'unknown';
+        resolvedDistance.value = num.tryParse(resolvedDistance.text) ?? 0;
+        resolvedTime.text =
+            response.routes![0].legs![0].duration?.text ?? 'unknown';
+        resolvedTime.value = num.tryParse(resolvedTime.text) ?? 0;
         steps = response.routes![0].legs![0].steps;
         await _buildAndPost();
         directionsAPIRequestResultStatus = 'OK';
@@ -466,16 +470,4 @@ class HumanDirections {
     await _gptPrompt(_prompt);
     _resultFlag = 0;
   }
-}
-
-/// Distance representation class
-class Distance {
-  String? text;
-  num? value;
-}
-
-/// Time representation classs
-class Time {
-  String? text;
-  num? value;
 }

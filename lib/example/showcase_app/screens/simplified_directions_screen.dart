@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../components/llm/supported_languages.dart';
+import '../../../components/metrics.dart';
 import '../../../human_directions.dart';
 import 'dart:async';
 
@@ -30,8 +31,8 @@ class _SimplifiedDirectionsScreenState
   String origin = '';
   String destination = '';
   String requestResult = '';
-  Distance resolvedDistance = Distance();
-  Time resolvedTime = Time();
+  Distance resolvedDistance = Distance(text: 'unknown', value: 0);
+  Time resolvedTime = Time(text: 'unknown', value: 0);
   bool useGeoLocation = false;
   bool enableDirectionsButton = true;
   late Timer _timer;
@@ -156,9 +157,8 @@ class _SimplifiedDirectionsScreenState
                     Column(
                       children: [
                         Text('Request Status: $requestResult'),
-                        Text(
-                            ('Total Distance: ${resolvedDistance.text ?? '0'}')),
-                        Text('Total Time: ${resolvedTime.text ?? '0'}'),
+                        Text(('Total Distance: ${resolvedDistance.text}')),
+                        Text('Total Time: ${resolvedTime.text}'),
                       ],
                     ),
                   ],

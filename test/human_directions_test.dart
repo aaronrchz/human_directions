@@ -5,13 +5,14 @@ import 'package:human_directions/components/distance_matrix.dart';
 
 void main() async {
   test('test Distance Matrix', () async {
-    final distanceMatrix = await getDistanceMatrix('YOUR_API_KEY', origins: [
+    final distanceMatrix = await getDistanceMatrix('qweq', origins: [
       '35.088292431841694, -106.61910760086647',
+      '35.12869686156047, -106.61634682382963',
     ], destinations: [
       '4200 Lomas Blvd NE, Albuquerque, NM 87110',
       '35.0831033940459, -106.61611343660347'
     ]);
     print(distanceMatrix);
-    expect(distanceMatrix, isA<dynamic>());
+    expect(distanceMatrix, isA<List<OriginDestinationMetrics>>());
   });
 }
