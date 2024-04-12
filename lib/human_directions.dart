@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart' hide Step;
-import 'package:google_directions_api/google_directions_api.dart';
+import 'package:google_directions_api/google_directions_api.dart'
+    hide Distance, Time;
 import 'package:dart_openai/dart_openai.dart';
+import 'package:human_directions/components/metrics.dart';
 import 'components/llm/models.dart';
 import 'components/llm/system_messages.dart';
 import 'components/llm/tools/tools.dart';
@@ -11,6 +13,7 @@ import 'components/places/places.dart';
 import 'components/llm/supported_languages.dart';
 import 'components/location.dart';
 import 'components/llm/recomendations_parse.dart';
+import 'components/distance_matrix.dart';
 
 /// Main class for the human directions package.
 ///
@@ -79,11 +82,11 @@ class HumanDirections {
   /*Output Data */
   /// The calculated distance between origin and destination after executing the methods fetchHumanDirections
   /// or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
-  Distance resolvedDistance = Distance();
+  Distance resolvedDistance = Distance(text: 'unknown', value: 0);
 
   /// The calculated estimated time to go between origin and destination after executing the methods fetchHumanDirections
   /// or fetchHumanDirectionsFromLocation, if none of those methods are executed successfully the members text and value are null.
-  Time resolvedTime = Time();
+  Time resolvedTime = Time(text: 'unknown', value: 0);
 
   ///A list with each instruction step given by Direction API.
   List<Step>? steps = [];
@@ -233,11 +236,14 @@ class HumanDirections {
   ///   - prompt: A string which is the question/prompt that's going to be asked to the llm in order to fetch recommendations.
   ///   - context: The build context used for fetching the current location,
   ///              its necessary as the Geolocation API needs to ask for permission to get the location
+  ///   - fetchPhotos: (bool, Default value false) if true it fetches one photo for each place, if false it doesn't.
   Future<NearbyPlacesRecomendationsObject> getNearbyRecommendations(
-      String prompt, BuildContext context) async {
+      String prompt, BuildContext context,
+      {bool fetchPhotos = false}) async {
     _recommendationsProcStatus = 'Started';
     await getCurrentLocation(context);
-    return await _gptPromptNearbyPlaces(prompt, currentPosition!)
+    return await _gptPromptNearbyPlaces(prompt, currentPosition!,
+            fetchPhotos: fetchPhotos)
         .timeout(const Duration(minutes: 2));
   }
 
@@ -259,10 +265,12 @@ class HumanDirections {
     directionsService.route(request,
         (DirectionsResult response, DirectionsStatus? status) async {
       if (status == DirectionsStatus.ok) {
-        resolvedDistance.text = response.routes![0].legs![0].distance?.text;
-        resolvedDistance.value = num.tryParse(resolvedDistance.text!) ?? 0;
-        resolvedTime.text = response.routes![0].legs![0].duration?.text;
-        resolvedTime.value = num.tryParse(resolvedTime.text!) ?? 0;
+        resolvedDistance.text =
+            response.routes![0].legs![0].distance?.text ?? 'unknown';
+        resolvedDistance.value = num.tryParse(resolvedDistance.text) ?? 0;
+        resolvedTime.text =
+            response.routes![0].legs![0].duration?.text ?? 'unknown';
+        resolvedTime.value = num.tryParse(resolvedTime.text) ?? 0;
         steps = response.routes![0].legs![0].steps;
         await _buildAndPost();
         directionsAPIRequestResultStatus = 'OK';
@@ -320,7 +328,8 @@ class HumanDirections {
 
   /// Full method to fetch recommendations for nearby places, internal use.
   Future<NearbyPlacesRecomendationsObject> _gptPromptNearbyPlaces(
-      String prompt, GeoCoord location) async {
+      String prompt, GeoCoord location,
+      {bool fetchPhotos = false}) async {
     try {
       OpenAI.apiKey = openAiApiKey;
       final systemMessage = _systenMessages.recommendationsSysMsg;
@@ -397,33 +406,57 @@ class HumanDirections {
         _recommendationsProcStatus = 'Parsing LLM response';
         final output =
             NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
-        final List<Map<String, dynamic>> photosRep = [];
-        for (var element in output.recommendations!) {
-          photosRep.add({
-            'id': element.id,
-            'uri_collection': null,
-          });
+        /*Get distance and time to */
+        List<String> destinations = [];
+        for (var recommendation in output.recommendations!) {
+          destinations.add(recommendation.address);
         }
-        final List<List<dynamic>> photosId = [];
-        for (var element in output.recommendations!) {
-          _recommendationsProcStatus =
-              'Fetching photos ids for each recommendation';
-          photosId.add(await _nearbyplacesController
-              .fetchPlacePhotosData(element.id)
-              .timeout(const Duration(seconds: 40)));
+        List<OriginDestinationMetrics> distanceMatrix = await getDistanceMatrix(
+            googleDirectionsApiKey,
+            destinations: destinations,
+            origins: ['${location.latitude},${location.longitude}'],
+            mode: _adaptTravelmode(travelMode),
+            units: unitSystem.toString());
+        int recomendationCounter = 0;
+        for (var recomendation in output.recommendations!) {
+          recomendation.distance = distanceMatrix[0]
+              .destinationsMetrics[recomendationCounter]
+              .metric
+              .distance;
+          recomendation.duration = distanceMatrix[0]
+              .destinationsMetrics[recomendationCounter]
+              .metric
+              .duration;
         }
-        int i = 0;
-        for (var element in photosId) {
-          _recommendationsProcStatus =
-              'Fetching photos uris for each recommendation';
-          photosRep[i]['uri_collection'] = await _nearbyplacesController
-              .fetchPhotosUris(element,
-                  width: 400, height: 400, maxOperations: 1)
-              .timeout(const Duration(seconds: 40));
-          i++;
+        if (fetchPhotos) {
+          final List<Map<String, dynamic>> photosRep = [];
+          for (var element in output.recommendations!) {
+            photosRep.add({
+              'id': element.id,
+              'uri_collection': null,
+            });
+          }
+          final List<List<dynamic>> photosId = [];
+          for (var element in output.recommendations!) {
+            _recommendationsProcStatus =
+                'Fetching photos ids for each recommendation';
+            photosId.add(await _nearbyplacesController
+                .fetchPlacePhotosData(element.id)
+                .timeout(const Duration(seconds: 40)));
+          }
+          int i = 0;
+          for (var element in photosId) {
+            _recommendationsProcStatus =
+                'Fetching photos uris for each recommendation';
+            photosRep[i]['uri_collection'] = await _nearbyplacesController
+                .fetchPhotosUris(element,
+                    width: 400, height: 400, maxOperations: 1)
+                .timeout(const Duration(seconds: 40));
+            i++;
+          }
+          output.recomendationPhotos =
+              PhotoCollection(placePhotoUriCollection: photosRep);
         }
-        output.recomendationPhotos =
-            PhotoCollection(placePhotoUriCollection: photosRep);
         _recommendationsProcStatus = 'Finished successfully';
         return output;
       } else {
@@ -466,16 +499,19 @@ class HumanDirections {
     await _gptPrompt(_prompt);
     _resultFlag = 0;
   }
-}
 
-/// Distance representation class
-class Distance {
-  String? text;
-  num? value;
-}
-
-/// Time representation classs
-class Time {
-  String? text;
-  num? value;
+  String _adaptTravelmode(TravelMode directionsAPITravwelMode) {
+    switch (directionsAPITravwelMode) {
+      case TravelMode.walking:
+        return DistanceMatrixTravelModes.walking;
+      case TravelMode.driving:
+        return DistanceMatrixTravelModes.driving;
+      case TravelMode.transit:
+        return DistanceMatrixTravelModes.transit;
+      case TravelMode.bicycling:
+        return DistanceMatrixTravelModes.bicycling;
+      default:
+        throw Exception('Invalid travel mode');
+    }
+  }
 }
