@@ -8,7 +8,6 @@ Future<List<OriginDestinationMetrics>> getDistanceMatrix(String apiKey,
     String units = 'metric',
     String mode = DistanceMatrixTravelModes.walking}) async {
   try {
-    print(mode);
     final response = await http.get(
       Uri.parse(
           'https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${destinations.join('|')}&mode=$mode&origins=${origins.join('|')}&units=$units&key=$apiKey'),

@@ -108,6 +108,9 @@ class HumanDirections {
 
   /// The last exception given from any called method from this class.
   String? lastException;
+
+  /// the time taken of the last proccess
+  String? stopwatchTime;
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
@@ -138,8 +141,8 @@ class HumanDirections {
       this.gptModelTemperature = 0.4})
       : _nearbyplacesController =
             PlacesController(placesApiKey: googleDirectionsApiKey),
-        _systenMessages =
-            HumanDirectionsLLMSystenMessages(openAIlanguage: openAIlanguage);
+        _systenMessages = HumanDirectionsLLMSystenMessages(
+            openAIlanguage: openAIlanguage, travelMode: travelMode.toString());
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => directionsAPIRequestResultStatus;
@@ -247,6 +250,15 @@ class HumanDirections {
         .timeout(const Duration(minutes: 2));
   }
 
+  Future<NearbyPlacesRecomendationsObject> getRecommendations(
+      String prompt, GeoCoord location,
+      {bool fetchPhotos = false}) async {
+    _recommendationsProcStatus = 'Started';
+    return await _gptPromptNearbyPlaces(prompt, location,
+            fetchPhotos: fetchPhotos)
+        .timeout(const Duration(minutes: 2));
+  }
+
   /// Primary method to fetxh directions, internal use.
   Future<int> _fetchDirections(String origin, String destination) async {
     DirectionsService directionsService = DirectionsService();
@@ -347,6 +359,8 @@ class HumanDirections {
 
       final tools = HumanDirectionsLLMTools.recommendationTool;
       _recommendationsProcStatus = 'Sending prompt to LLM';
+      Stopwatch stopwatch = Stopwatch();
+      stopwatch.start();
       final chat = await OpenAI.instance.chat.create(
         model: gptModel,
         messages: requestMessages,
@@ -354,6 +368,7 @@ class HumanDirections {
         tools: [tools],
       ).timeout(const Duration(seconds: 40));
       final message = chat.choices.first.message;
+      List<dynamic> result = [];
       if (message.haveToolCalls) {
         _recommendationsProcStatus =
             'LLM response received, processing tool request';
@@ -368,7 +383,7 @@ class HumanDirections {
               decodedArgs[RecommendationToolArgs.categories.name]);
           final radius = decodedArgs[RecommendationToolArgs.radius.name];
           _recommendationsProcStatus = 'Fetching nearby places';
-          final result = await _nearbyplacesController
+          result = await _nearbyplacesController
               .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,
                   types: categories)
               .timeout(const Duration(seconds: 40));
@@ -404,8 +419,8 @@ class HumanDirections {
       }
       if (secondResponseMessage.length > 10) {
         _recommendationsProcStatus = 'Parsing LLM response';
-        final output =
-            NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
+        final output = NearbyPlacesRecomendationsObject.fromStringWPIDO(
+            secondResponseMessage, result);
         /*Get distance and time to */
         List<String> destinations = [];
         for (var recommendation in output.recommendations!) {
@@ -458,6 +473,9 @@ class HumanDirections {
               PhotoCollection(placePhotoUriCollection: photosRep);
         }
         _recommendationsProcStatus = 'Finished successfully';
+        stopwatch.stop();
+        stopwatchTime = 'Time: ${stopwatch.elapsed}';
+        output.processTime = stopwatchTime;
         return output;
       } else {
         _recommendationsProcStatus = 'Error';

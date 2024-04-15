@@ -5,7 +5,7 @@ Human directions is a package that tries to **improve the instructions given by 
 ## Requirements
 
 ### Api keys 
-This package needs **two api keys to work**, a Google cloud API key (enabled for directions API and places(new) API) and a OpenAI API key
+This package needs **two api keys to work**, a Google cloud API key (enabled for directions API, places(new) API and distance matix API) and a OpenAI API key
 
 ### Dependencies.
 
@@ -260,9 +260,12 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
     print(recommendation.openingHours);
     print(recommendation.rating);
     print(recommendation.phoneNumber);
+    print(recommendation.distance.text);
+    print(recommendation.duration.text);
     if(fetchPhotos) {
       print(recommendations.recomendationPhotos!.placePhotoUriCollection[c]
         ['uri_collection'][0]); //gets the first photo uri for the place
+        c++
     }
   }
   print(recommendations.closingMessage);

@@ -157,6 +157,7 @@ class _RequestDNearbyPlacesScreen extends State<RequestDNearbyPlacesScreen> {
                             ),
                           ),
                           Text(data.closingMessage ?? 'end of result.'),
+                          Text(data.processTime ?? ''),
                         ],
                       );
                     } else {
