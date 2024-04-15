@@ -58,7 +58,7 @@ Main class for the human directions package.
 
 - **placesRadius**: (```double, Default value: 50.0```) this value represents the dimension of the radius to fetch places for the directions, as they are used to better give better references for each step, this does not affect the recommendations, as that radius is chosen by the AI
 
-- **gptModel**: (```String, Default value: OpenAiModelsNames.gpt4```) this is the name of the used AI model, there's a class that contains all the model names up to March 13, 2024: ```package:human_directions/components/llm/models.dart``` however, as for previous tests, GPT-4 is considered to be the best fit.
+- **gptModel**: (```String, Default value: OpenAiModelsNames.gpt4Turbo```) this is the name of the used AI model, there's a class that contains all the model names up to March 13, 2024: ```package:human_directions/components/llm/models.dart``` however, as for previous tests, GPT-4 is considered to be the best fit.
    
 - **gptModelTemperature**: (```double, Default value: 0.4```) temperature is a number between 0 and 2, when set higher the outputs will be more random and possibly imprecise, closer to 0 the outputs will be more deterministic
 
