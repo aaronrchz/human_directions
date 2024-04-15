@@ -272,6 +272,53 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
 }
 ```
 
+#### Get recommendations for places.
+
+```dart
+import 'package:human_directions/human_directions.dart';
+import 'package:human_directions/components/llm/recomendations_parse.dart';
+import 'package:google_directions_api/google_directions_api.dart';
+
+/*This is a simplified example of how to use the the human_directions package, however the controller 
+has more parameters that can change the output, such as the lenguage */
+void getPlacesRecommendations() async {
+  const String openAiApiKey = 'YOUR_API_KEY';
+  const String googleDirectionsApiKey = 'YOUR_API_KEY';
+  final HumanDirections controller = HumanDirections(
+      openAiApiKey: openAiApiKey,
+      googleDirectionsApiKey: googleDirectionsApiKey);
+  const String prompt = 'Where can i get a drink?';
+  const bool fetchPhotos = false; //set to true if you want to fetch the photos for the places
+  NearbyPlacesRecomendationsObject recommendations =
+      await controller.getRecommendations(
+            prompt, const GeoCoord(35.06609963151214, -106.5336236826646),
+            fetchPhotos: fetchPhotos);
+
+  if (recommendations.hasError) {
+    print(recommendations.errorMessage);
+    return;
+  }
+  int c = 0;
+  print(recommendations.startMessage);
+  for (var recommendation in recommendations.recommendations!) {
+    print(recommendation.name);
+    print(recommendation.address);
+    print(recommendation.description);
+    print(recommendation.openingHours);
+    print(recommendation.rating);
+    print(recommendation.phoneNumber);
+    print(recommendation.distance.text);
+    print(recommendation.duration.text);
+    if(fetchPhotos) {
+      print(recommendations.recomendationPhotos!.placePhotoUriCollection[c]
+        ['uri_collection'][0]); //gets the first photo uri for the place
+        c++
+    }
+  }
+  print(recommendations.closingMessage);
+}
+```
+
 #### Get Origin-Destination based Directions with status messages
 
 ```dart

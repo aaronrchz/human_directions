@@ -250,6 +250,12 @@ class HumanDirections {
         .timeout(const Duration(minutes: 2));
   }
 
+  /// Gets a set of recommendations of places nearby a coordinate based on a user prompt such as "where can i get a drink?"
+  ///
+  /// Parameters:
+  ///   - prompt: A string which is the question/prompt that's going to be asked to the llm in order to fetch recommendations.
+  ///   - location: (Geocoord from package google_directions_api)The location to fetch recommendations from, as a geolocation(latitude, longitude).
+  ///    - fetchPhotos: (bool, Default value false) if true it fetches one photo for each place, if false it doesn't.
   Future<NearbyPlacesRecomendationsObject> getRecommendations(
       String prompt, GeoCoord location,
       {bool fetchPhotos = false}) async {
