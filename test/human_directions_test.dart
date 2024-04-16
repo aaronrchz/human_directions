@@ -5,6 +5,7 @@ import 'package:google_directions_api/google_directions_api.dart';
 import 'package:human_directions/components/distance_matrix.dart';
 import 'package:human_directions/components/llm/recomendations_parse.dart';
 import 'package:human_directions/human_directions.dart';
+import 'package:human_directions/components/places/places.dart';
 
 //import 'package:human_directions/example/showcase_app/human_directions_app.dart';
 void main() async {
@@ -57,5 +58,13 @@ void main() async {
     print(recommendations.closingMessage);
     expect(recommendations, isA<NearbyPlacesRecomendationsObject>());
     expect(recommendations.hasError, isFalse);
+  });
+  test('test Overrpass nearbyRecomendations', () async {
+    PlacesController controller = PlacesController.overpassPlugin();
+    var result = await controller.overpassSimplifyFetchNearbyPlacess(
+        const GeoCoord(35.06624013447273, -106.53272246040005), 500);
+    print(result);
+    //expect(recommendations, isA<NearbyPlacesRecomendationsObject>());
+    //expect(recommendations.hasError, isFalse);
   });
 }

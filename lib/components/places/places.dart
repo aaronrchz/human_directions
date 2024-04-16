@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:http/http.dart' as http;
 import 'places_types.dart';
+import 'package:flutter_overpass/flutter_overpass.dart';
 
 /// The controller that manages all the use of places API
 ///
@@ -14,8 +15,15 @@ class PlacesController {
   Map<String, String>? responseHeaders;
   String placesApiKey;
   static const List<String> defaultTypes = [PlaceType.any];
+  bool useGooglePlacesApi;
+  bool _methodsSelector;
 
-  PlacesController({required this.placesApiKey});
+  PlacesController({required this.placesApiKey, this.useGooglePlacesApi = true})
+      : _methodsSelector = useGooglePlacesApi;
+  factory PlacesController.overpassPlugin() {
+    return PlacesController(
+        placesApiKey: 'API_DISABLED', useGooglePlacesApi: false);
+  }
 
   /// Gets the raw output from the Google Places API.
   ///
@@ -28,6 +36,10 @@ class PlacesController {
   ///   - (List<dynamic>) A list of the places found.
   Future<List<dynamic>> fetchNearbyPlaces(GeoCoord centerCoord, num radius,
       {List<String> types = defaultTypes}) async {
+    if (!_methodsSelector) {
+      throw Exception(
+          'Method not available, please use the overpass plugin or create a new instance with a google places API key');
+    }
     String apiKey = placesApiKey;
     const uri = 'https://places.googleapis.com/v1/places:searchNearby';
     final requestBodyPrototype = {
@@ -83,6 +95,10 @@ class PlacesController {
   Future<List<dynamic>> simplifyFetchNearbyPlacess(
       GeoCoord centerCoord, num radius,
       {List<String> types = defaultTypes}) async {
+    if (!_methodsSelector) {
+      throw Exception(
+          'Method not available, please use the overpass plugin or create a new instance with a google places API key');
+    }
     try {
       final data = await fetchNearbyPlaces(centerCoord, radius, types: types);
       List<dynamic> result = [];
@@ -125,6 +141,10 @@ class PlacesController {
   /// Returns:
   ///   - (String) A string with the summary of the places.
   String summaryNerbyPlaces(List<dynamic>? places) {
+    if (!_methodsSelector) {
+      throw Exception(
+          'Method not available, please use the overpass plugin or create a new instance with a google places API key');
+    }
     String summary = '';
     if (places == null || places.isEmpty) {
       return 'No places nearby';
@@ -148,6 +168,10 @@ class PlacesController {
   Future<String> fetchAndSummarizeNearbyPlaces(
       GeoCoord? centerCoord, double radius,
       {List<String> types = defaultTypes}) async {
+    if (!_methodsSelector) {
+      throw Exception(
+          'Method not available, please use the overpass plugin or create a new instance with a google places API key');
+    }
     try {
       GeoCoord queryCoord;
       if (centerCoord != null) {
@@ -172,6 +196,10 @@ class PlacesController {
   /// Returns:
   ///   - (List<dynamic>) A list of the photos found.
   Future<List<dynamic>> fetchPlacePhotosData(String placeId) async {
+    if (!_methodsSelector) {
+      throw Exception(
+          'Method not available, please use the overpass plugin or create a new instance with a google places API key');
+    }
     String uri = 'https://places.googleapis.com/v1/places/$placeId';
     Map<String, String> headers = {
       'ContentType': 'application/json',
@@ -205,6 +233,10 @@ class PlacesController {
   ///   - (List<dynamic>) A list of the photos uris.
   Future<List<dynamic>> fetchPhotosUris(List<dynamic> photos,
       {int? width, int? height, int? maxOperations}) async {
+    if (!_methodsSelector) {
+      throw Exception(
+          'Method not available, please use the overpass plugin or create a new instance with a google places API key');
+    }
     List<dynamic> output = [];
     int opCase = 0;
     if (maxOperations != null) {
@@ -260,6 +292,22 @@ class PlacesController {
         return output;
       default:
         throw Exception('Wrong operation');
+    }
+  }
+
+  Future<dynamic> overpassSimplifyFetchNearbyPlacess(
+      GeoCoord centerCoord, num radius,
+      {List<String> types = defaultTypes}) async {
+    try {
+      final flutterOverpass = FlutterOverpass();
+      final nearbyPlaces = await flutterOverpass.getNearbyNodes(
+        latitude: centerCoord.latitude,
+        longitude: centerCoord.longitude,
+        radius: radius.toDouble(),
+      );
+      return nearbyPlaces;
+    } catch (e) {
+      throw Exception('Failed to fetch nearby places: $e');
     }
   }
 }
