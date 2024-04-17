@@ -17,6 +17,8 @@ flutter_dotenv: ^5.1.0 : https://pub.dev/packages/flutter_dotenv
 
 geolocation: ^11.0.0 : https://pub.dev/packages/geolocator
 
+flutter_overpass: ^1.1.0 : https://pub.dev/packages/flutter_overpass
+
 http:  ^1.1.0
 
 
@@ -270,6 +272,35 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
   }
   print(recommendations.closingMessage);
 }
+```
+
+#### Get nearby places with overpass plugin.
+
+```dart
+import 'package:human_directions/components/places/places.dart';
+
+void getNearbyPlacesOverpassPlugin() async {
+    PlacesController controller = PlacesController.overpassPluginOnly();
+    // The overpass plugin can also be accessed if the PlacesApiKey is provided however using the ovepassPluginOnly constructor wull disable the methods that use the Google places API
+    // PlacesController controller = PlacesController(placesApiKey: 'YOUR_API_KEY');
+    var result = await controller.overpassSimplifyFetchNearbyPlacess(
+        const GeoCoord(35.06624013447273, -106.53272246040005), 500);
+    if (result.isEmpty) {
+      return;
+    }
+    for (var element in result) {
+      print('id: ${element.id}');
+      print('name: ${element.tags?.name}');
+      print('openingHours: ${element.tags?.openingHours}');
+      print('beauty: ${element.tags?.beauty}');
+      print('amenity: ${element.tags?.amenity}');
+      print(
+          'Address: ${element.tags?.addrStreet} ${element.tags?.addrHousenumber} ${element.tags?.addrCity} ${element.tags?.addrPostcode}');
+      print('Location: ${element.lat}, ${element.lon}');
+      print('openingHours: ${element.tags?.openingHours}');
+      print('website: ${element.tags?.website}');
+    }
+  }
 ```
 
 #### Get recommendations for places.

@@ -1,5 +1,6 @@
 //import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_overpass/flutter_overpass.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:human_directions/components/distance_matrix.dart';
@@ -60,11 +61,25 @@ void main() async {
     expect(recommendations.hasError, isFalse);
   });
   test('test Overrpass nearbyRecomendations', () async {
-    PlacesController controller = PlacesController.overpassPlugin();
+    PlacesController controller = PlacesController.overpassPluginOnly();
     var result = await controller.overpassSimplifyFetchNearbyPlacess(
         const GeoCoord(35.06624013447273, -106.53272246040005), 500);
-    print(result);
-    //expect(recommendations, isA<NearbyPlacesRecomendationsObject>());
-    //expect(recommendations.hasError, isFalse);
+    if (result.isEmpty) {
+      return;
+    }
+    for (var element in result) {
+      print('id: ${element.id}');
+      print('name: ${element.tags?.name}');
+      print('openingHours: ${element.tags?.openingHours}');
+      print('beauty: ${element.tags?.beauty}');
+      print('amenity: ${element.tags?.amenity}');
+      print(
+          'Address: ${element.tags?.addrStreet} ${element.tags?.addrHousenumber} ${element.tags?.addrCity} ${element.tags?.addrPostcode}');
+      print('Location: ${element.lat}, ${element.lon}');
+      print('openingHours: ${element.tags?.openingHours}');
+      print('website: ${element.tags?.website}');
+    }
+    expect(result, isA<List<Element>>());
+    expect(result, isNotEmpty);
   });
 }

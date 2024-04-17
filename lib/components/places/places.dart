@@ -20,7 +20,7 @@ class PlacesController {
 
   PlacesController({required this.placesApiKey, this.useGooglePlacesApi = true})
       : _methodsSelector = useGooglePlacesApi;
-  factory PlacesController.overpassPlugin() {
+  factory PlacesController.overpassPluginOnly() {
     return PlacesController(
         placesApiKey: 'API_DISABLED', useGooglePlacesApi: false);
   }
@@ -295,7 +295,16 @@ class PlacesController {
     }
   }
 
-  Future<dynamic> overpassSimplifyFetchNearbyPlacess(
+  /// This method fetches the nearby places as according to the Overpass API.
+  ///
+  /// Parameters:
+  ///   - [centerCoord] (GeoCoord from package: google_directions_api) The center of the search.
+  ///   - [radius] (num) The search radius in meters.
+  ///   - [types] (List<String>) The types of the places to search for.
+  ///
+  /// Returns:
+  ///   - (List<Element>) A list of the places found.
+  Future<List<Element>> overpassSimplifyFetchNearbyPlacess(
       GeoCoord centerCoord, num radius,
       {List<String> types = defaultTypes}) async {
     try {
@@ -305,7 +314,11 @@ class PlacesController {
         longitude: centerCoord.longitude,
         radius: radius.toDouble(),
       );
-      return nearbyPlaces;
+      if (nearbyPlaces.elements == null) {
+        return [];
+      } else {
+        return nearbyPlaces.elements!;
+      }
     } catch (e) {
       throw Exception('Failed to fetch nearby places: $e');
     }
