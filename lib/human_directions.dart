@@ -38,7 +38,7 @@ import 'components/distance_matrix.dart';
 ///     - placesRadius: (double, Default value: 50.0) this value represents the dimension of the radius to fetch places for
 ///             the directions, as they are used to better give better references for each step, this does not affect the
 ///             recommendations, as that radius is chosen by the AI
-///     - gptModel: (String, Default value: OpenAiModelsNames.gpt4) this is the name of the used AI model, there's a class
+///     - gptModel: (String, Default value: OpenAiModelsNames.gpt4Turbo) this is the name of the used AI model, there's a class
 ///             that contains all the model names up to March 13, 2024: package:human_directions/components/llm/models.dart
 ///             however, as for previous tests, GPT-4 is considered to be the best fit.
 ///     - gptModelTemperature: (double, Default value: 0.4) temperature is a number between 0 and 2, when set higher the outputs
@@ -108,6 +108,9 @@ class HumanDirections {
 
   /// The last exception given from any called method from this class.
   String? lastException;
+
+  /// the time taken of the last proccess
+  String? stopwatchTime;
   /* Parameters */
   final String openAiApiKey;
   final String googleDirectionsApiKey;
@@ -134,12 +137,12 @@ class HumanDirections {
       this.travelMode = TravelMode.walking,
       this.openAIlanguage = OpenAILanguage.en,
       this.placesRadius = 50.0,
-      this.gptModel = OpenAiModelsNames.gpt4,
+      this.gptModel = OpenAiModelsNames.gpt4Turbo,
       this.gptModelTemperature = 0.4})
       : _nearbyplacesController =
             PlacesController(placesApiKey: googleDirectionsApiKey),
-        _systenMessages =
-            HumanDirectionsLLMSystenMessages(openAIlanguage: openAIlanguage);
+        _systenMessages = HumanDirectionsLLMSystenMessages(
+            openAIlanguage: openAIlanguage, travelMode: travelMode.toString());
   /* getters */
   List<Step>? get directionsStepsList => steps;
   String get directionsRequestResult => directionsAPIRequestResultStatus;
@@ -247,6 +250,21 @@ class HumanDirections {
         .timeout(const Duration(minutes: 2));
   }
 
+  /// Gets a set of recommendations of places nearby a coordinate based on a user prompt such as "where can i get a drink?"
+  ///
+  /// Parameters:
+  ///   - prompt: A string which is the question/prompt that's going to be asked to the llm in order to fetch recommendations.
+  ///   - location: (Geocoord from package google_directions_api)The location to fetch recommendations from, as a geolocation(latitude, longitude).
+  ///    - fetchPhotos: (bool, Default value false) if true it fetches one photo for each place, if false it doesn't.
+  Future<NearbyPlacesRecomendationsObject> getRecommendations(
+      String prompt, GeoCoord location,
+      {bool fetchPhotos = false}) async {
+    _recommendationsProcStatus = 'Started';
+    return await _gptPromptNearbyPlaces(prompt, location,
+            fetchPhotos: fetchPhotos)
+        .timeout(const Duration(minutes: 2));
+  }
+
   /// Primary method to fetxh directions, internal use.
   Future<int> _fetchDirections(String origin, String destination) async {
     DirectionsService directionsService = DirectionsService();
@@ -347,6 +365,8 @@ class HumanDirections {
 
       final tools = HumanDirectionsLLMTools.recommendationTool;
       _recommendationsProcStatus = 'Sending prompt to LLM';
+      Stopwatch stopwatch = Stopwatch();
+      stopwatch.start();
       final chat = await OpenAI.instance.chat.create(
         model: gptModel,
         messages: requestMessages,
@@ -354,6 +374,7 @@ class HumanDirections {
         tools: [tools],
       ).timeout(const Duration(seconds: 40));
       final message = chat.choices.first.message;
+      List<dynamic> result = [];
       if (message.haveToolCalls) {
         _recommendationsProcStatus =
             'LLM response received, processing tool request';
@@ -368,7 +389,7 @@ class HumanDirections {
               decodedArgs[RecommendationToolArgs.categories.name]);
           final radius = decodedArgs[RecommendationToolArgs.radius.name];
           _recommendationsProcStatus = 'Fetching nearby places';
-          final result = await _nearbyplacesController
+          result = await _nearbyplacesController
               .simplifyFetchNearbyPlacess(GeoCoord(latitude, longitude), radius,
                   types: categories)
               .timeout(const Duration(seconds: 40));
@@ -404,8 +425,8 @@ class HumanDirections {
       }
       if (secondResponseMessage.length > 10) {
         _recommendationsProcStatus = 'Parsing LLM response';
-        final output =
-            NearbyPlacesRecomendationsObject.fromString(secondResponseMessage);
+        final output = NearbyPlacesRecomendationsObject.fromStringWPIDO(
+            secondResponseMessage, result);
         /*Get distance and time to */
         List<String> destinations = [];
         for (var recommendation in output.recommendations!) {
@@ -458,6 +479,9 @@ class HumanDirections {
               PhotoCollection(placePhotoUriCollection: photosRep);
         }
         _recommendationsProcStatus = 'Finished successfully';
+        stopwatch.stop();
+        stopwatchTime = 'Time: ${stopwatch.elapsed}';
+        output.processTime = stopwatchTime;
         return output;
       } else {
         _recommendationsProcStatus = 'Error';

@@ -25,15 +25,36 @@ class Recommendation {
 
   ///Factory method to create a Recommendation object from the json map provided by the LLM.
   factory Recommendation.fromJson(Map<String, dynamic> json) {
+    var openingHoursList = json['opening_hours'] as List<dynamic>?;
+    String openingHoursConcatenated = openingHoursList != null
+        ? openingHoursList.map((e) => e.toString()).join(', ')
+        : 'No opening hours available';
     return Recommendation(
-      id: json['id'],
+      id: json['id'] ?? json['placeId'],
       name: json['name'],
       address: json['address'],
       rating: json['rating'].toString(),
-      description: json['description'],
-      //openNow: json['open_now'].toString(),
-      openingHours: json['opening_hours'],
-      phoneNumber: json['phone_number'],
+      description: json['description'] ?? 'place description not found',
+      openingHours: openingHoursConcatenated,
+      phoneNumber: json['phone_number'] ??
+          'Phone number not available', // Using null-coalescing operator for phoneNumber
+    );
+  }
+  factory Recommendation.fromJsonWithOussideDesc(
+      Map<String, dynamic> json, String description) {
+    var openingHoursList = json['opening_hours'] as List<dynamic>?;
+    String openingHoursConcatenated = openingHoursList != null
+        ? openingHoursList.map((e) => e.toString()).join(', ')
+        : 'No opening hours available';
+    return Recommendation(
+      id: json['id'] ?? json['placeId'],
+      name: json['name'],
+      address: json['address'],
+      rating: json['rating'].toString(),
+      description: description,
+      openingHours: openingHoursConcatenated,
+      phoneNumber: json['phone_number'] ??
+          'Phone number not available', // Using null-coalescing operator for phoneNumber
     );
   }
 }
@@ -52,6 +73,7 @@ class NearbyPlacesRecomendationsObject {
   String? closingMessage;
   bool hasError;
   String? errorMessage;
+  String? processTime;
 
   NearbyPlacesRecomendationsObject({
     required this.startMessage,
@@ -71,6 +93,31 @@ class NearbyPlacesRecomendationsObject {
           .map((item) => Recommendation.fromJson(item))
           .toList(),
       closingMessage: data['closing_message'],
+      errorMessage: null,
+      hasError: false,
+    );
+  }
+
+  ///Factory method that parses the raw message from the LLM that references only the places ids and returns a NearbyPlacesRecomendationsObject object.
+  factory NearbyPlacesRecomendationsObject.fromStringWPIDO(
+      String rawData, List<dynamic> placesSearchResult) {
+    Map<String, dynamic> data = jsonDecode(rawData);
+    List<Recommendation> recommendations = [];
+    List<dynamic> idList = data['recommendations'];
+    for (var idItem in idList) {
+      var found = placesSearchResult.firstWhere(
+        (place) => place['placeId'] == idItem['id'],
+        orElse: () => null,
+      );
+      if (found != null) {
+        recommendations.add(Recommendation.fromJsonWithOussideDesc(
+            found, idItem['description']));
+      }
+    }
+    return NearbyPlacesRecomendationsObject(
+      startMessage: data['start_message'],
+      closingMessage: data['closing_message'],
+      recommendations: recommendations,
       errorMessage: null,
       hasError: false,
     );

@@ -5,7 +5,7 @@ Human directions is a package that tries to **improve the instructions given by 
 ## Requirements
 
 ### Api keys 
-This package needs **two api keys to work**, a Google cloud API key (enabled for directions API and places(new) API) and a OpenAI API key
+This package needs **two api keys to work**, a Google cloud API key (enabled for directions API, places(new) API and distance matix API) and a OpenAI API key
 
 ### Dependencies.
 
@@ -16,6 +16,8 @@ google_directions_api: ^0.10.0 : https://pub.dev/packages/google_directions_api/
 flutter_dotenv: ^5.1.0 : https://pub.dev/packages/flutter_dotenv
 
 geolocation: ^11.0.0 : https://pub.dev/packages/geolocator
+
+flutter_overpass: ^1.1.0 : https://pub.dev/packages/flutter_overpass
 
 http:  ^1.1.0
 
@@ -58,7 +60,7 @@ Main class for the human directions package.
 
 - **placesRadius**: (```double, Default value: 50.0```) this value represents the dimension of the radius to fetch places for the directions, as they are used to better give better references for each step, this does not affect the recommendations, as that radius is chosen by the AI
 
-- **gptModel**: (```String, Default value: OpenAiModelsNames.gpt4```) this is the name of the used AI model, there's a class that contains all the model names up to March 13, 2024: ```package:human_directions/components/llm/models.dart``` however, as for previous tests, GPT-4 is considered to be the best fit.
+- **gptModel**: (```String, Default value: OpenAiModelsNames.gpt4Turbo```) this is the name of the used AI model, there's a class that contains all the model names up to March 13, 2024: ```package:human_directions/components/llm/models.dart``` however, as for previous tests, GPT-4 is considered to be the best fit.
    
 - **gptModelTemperature**: (```double, Default value: 0.4```) temperature is a number between 0 and 2, when set higher the outputs will be more random and possibly imprecise, closer to 0 the outputs will be more deterministic
 
@@ -260,9 +262,88 @@ void getNearbyPlacesRecommendations(BuildContext context) async {
     print(recommendation.openingHours);
     print(recommendation.rating);
     print(recommendation.phoneNumber);
+    print(recommendation.distance.text);
+    print(recommendation.duration.text);
     if(fetchPhotos) {
       print(recommendations.recomendationPhotos!.placePhotoUriCollection[c]
         ['uri_collection'][0]); //gets the first photo uri for the place
+        c++
+    }
+  }
+  print(recommendations.closingMessage);
+}
+```
+
+#### Get nearby places with overpass plugin.
+
+```dart
+import 'package:human_directions/components/places/places.dart';
+
+void getNearbyPlacesOverpassPlugin() async {
+    PlacesController controller = PlacesController.overpassPluginOnly();
+    // The overpass plugin can also be accessed if the PlacesApiKey is provided however using the ovepassPluginOnly constructor wull disable the methods that use the Google places API
+    // PlacesController controller = PlacesController(placesApiKey: 'YOUR_API_KEY');
+    var result = await controller.overpassSimplifyFetchNearbyPlacess(
+        const GeoCoord(35.06624013447273, -106.53272246040005), 500);
+    if (result.isEmpty) {
+      return;
+    }
+    for (var element in result) {
+      print('id: ${element.id}');
+      print('name: ${element.tags?.name}');
+      print('openingHours: ${element.tags?.openingHours}');
+      print('beauty: ${element.tags?.beauty}');
+      print('amenity: ${element.tags?.amenity}');
+      print(
+          'Address: ${element.tags?.addrStreet} ${element.tags?.addrHousenumber} ${element.tags?.addrCity} ${element.tags?.addrPostcode}');
+      print('Location: ${element.lat}, ${element.lon}');
+      print('openingHours: ${element.tags?.openingHours}');
+      print('website: ${element.tags?.website}');
+    }
+  }
+```
+
+#### Get recommendations for places.
+
+```dart
+import 'package:human_directions/human_directions.dart';
+import 'package:human_directions/components/llm/recomendations_parse.dart';
+import 'package:google_directions_api/google_directions_api.dart';
+
+/*This is a simplified example of how to use the the human_directions package, however the controller 
+has more parameters that can change the output, such as the lenguage */
+void getPlacesRecommendations() async {
+  const String openAiApiKey = 'YOUR_API_KEY';
+  const String googleDirectionsApiKey = 'YOUR_API_KEY';
+  final HumanDirections controller = HumanDirections(
+      openAiApiKey: openAiApiKey,
+      googleDirectionsApiKey: googleDirectionsApiKey);
+  const String prompt = 'Where can i get a drink?';
+  const bool fetchPhotos = false; //set to true if you want to fetch the photos for the places
+  NearbyPlacesRecomendationsObject recommendations =
+      await controller.getRecommendations(
+            prompt, const GeoCoord(35.06609963151214, -106.5336236826646),
+            fetchPhotos: fetchPhotos);
+
+  if (recommendations.hasError) {
+    print(recommendations.errorMessage);
+    return;
+  }
+  int c = 0;
+  print(recommendations.startMessage);
+  for (var recommendation in recommendations.recommendations!) {
+    print(recommendation.name);
+    print(recommendation.address);
+    print(recommendation.description);
+    print(recommendation.openingHours);
+    print(recommendation.rating);
+    print(recommendation.phoneNumber);
+    print(recommendation.distance.text);
+    print(recommendation.duration.text);
+    if(fetchPhotos) {
+      print(recommendations.recomendationPhotos!.placePhotoUriCollection[c]
+        ['uri_collection'][0]); //gets the first photo uri for the place
+        c++
     }
   }
   print(recommendations.closingMessage);
